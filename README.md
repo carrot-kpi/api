@@ -12,13 +12,15 @@ Under the `./terraform` folder you can find the Terraform files used to
 bootstrap the needed infrastructure (ignore the `./local` folder for now). The
 following resources are created:
 
-- **k8s Kubernetes cluster**: a `digitalocean_kubernetes_cluster` cluster
+- **k8s VPC**: a `digitalocean_vpc` for the cluster.
+- **k8s firewall**: a `digitalocean_firewall` for the cluster.
+- **main Kubernetes cluster**: the `digitalocean_kubernetes_cluster` cluster
   resource that will actually run the API, with autoscaling enabled going from a
   minimum of 1 to up to 3 1 vCPU/2Gb memory nodes.
 - **main domain**: a `digitalocean_domain`. The default value is
   `carrot-kpi.dev` and it's pointed to the K8s cluster's ingress through
   Terraform while deploying on DigitalOcean.
-- **k8s-balancer certificate**: a [LetsEncrypt](https://letsencrypt.org/)
+- **k8s-ingress certificate**: a [LetsEncrypt](https://letsencrypt.org/)
   certificate of type `digitalocean_certificate` used to enable HTTPS on the K8s
   cluster's main ingress.
 - **init_scripts config map**: a config map to mount init scripts into the pod
