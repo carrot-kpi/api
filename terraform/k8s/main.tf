@@ -1,33 +1,8 @@
-resource "kubernetes_service_v1" "ipfs_node_swarm" {
+resource "kubernetes_service_v1" "ipfs_node_internal" {
   metadata {
-    name = "ipfs-node-swarm"
+    name = "ipfs-node-internal"
     labels = {
-      app = "ipfs-node-swarm"
-    }
-  }
-  spec {
-    type = "LoadBalancer"
-    port {
-      name        = "kubo-swarm"
-      target_port = "kubo-swarm"
-      port        = 4001
-    }
-    port {
-      name        = "cluster-swarm"
-      target_port = "cluster-swarm"
-      port        = 9096
-    }
-    selector = {
-      app = "node"
-    }
-  }
-}
-
-resource "kubernetes_service_v1" "ipfs_node_gateway" {
-  metadata {
-    name = "ipfs-node-gateway"
-    labels = {
-      app = "ipfs-node-gateway"
+      app = "ipfs-node-internal"
     }
   }
   spec {
@@ -35,6 +10,16 @@ resource "kubernetes_service_v1" "ipfs_node_gateway" {
       name        = "kubo-gateway"
       target_port = "kubo-gateway"
       port        = 8080
+    }
+    port {
+      name        = "cluster-proxy"
+      target_port = "cluster-proxy"
+      port        = 9095
+    }
+    port {
+      name        = "cluster-swarm"
+      port        = 9096
+      target_port = "cluster-swarm"
     }
     selector = {
       app = "node"
@@ -59,11 +44,12 @@ resource "kubernetes_horizontal_pod_autoscaler_v2" "ipfs_node" {
   }
   spec {
     scale_target_ref {
-      kind = "StatefulSet"
-      name = "ipfs-node"
+      api_version = "apps/v1"
+      kind        = "StatefulSet"
+      name        = "ipfs-node"
     }
     min_replicas = 2
-    max_replicas = 4
+    max_replicas = 3
     metric {
       type = "Resource"
       resource {
@@ -99,6 +85,14 @@ resource "kubernetes_stateful_set" "ipfs_node" {
           name    = "init-kubo"
           image   = "ipfs/kubo:latest"
           command = ["sh", "/custom/init-kubo.sh"]
+          resources {
+            limits = {
+              cpu = "500m"
+            }
+            requests = {
+              cpu = "250m"
+            }
+          }
           volume_mount {
             name       = "init-scripts"
             mount_path = "/custom"
@@ -135,6 +129,14 @@ resource "kubernetes_stateful_set" "ipfs_node" {
             timeout_seconds       = 5
             period_seconds        = 15
           }
+          resources {
+            limits = {
+              cpu = "500m"
+            }
+            requests = {
+              cpu = "250m"
+            }
+          }
           volume_mount {
             name       = "ipfs-storage"
             mount_path = "/data/ipfs"
@@ -165,7 +167,7 @@ resource "kubernetes_stateful_set" "ipfs_node" {
             value = var.bootstrap_peer_id
           }
           port {
-            name           = "http"
+            name           = "cluster-proxy"
             protocol       = "TCP"
             container_port = 9095
           }
@@ -173,6 +175,14 @@ resource "kubernetes_stateful_set" "ipfs_node" {
             name           = "cluster-swarm"
             protocol       = "TCP"
             container_port = 9096
+          }
+          resources {
+            limits = {
+              cpu = "500m"
+            }
+            requests = {
+              cpu = "250m"
+            }
           }
           liveness_probe {
             tcp_socket {
@@ -246,7 +256,7 @@ resource "kubernetes_ingress_v1" "main" {
           path = "/ipfs"
           backend {
             service {
-              name = "ipfs-node-gateway"
+              name = "ipfs-node-internal"
               port {
                 name = "kubo-gateway"
               }

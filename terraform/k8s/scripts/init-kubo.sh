@@ -7,10 +7,7 @@ if [ -f /data/ipfs/repo.lock ]; then
   rm /data/ipfs/repo.lock
 fi
 
-ipfs init --profile="server,badgerds"
-ipfs config Datastore.StorageMax 180GB
-ipfs config --json Swarm.ConnMgr.HighWater 2000
-ipfs config --json Datastore.BloomFilterSize 1048576
+ipfs init --profile="server"
 
 chown -R ipfs /data/ipfs
 

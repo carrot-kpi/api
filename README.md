@@ -116,9 +116,11 @@ installed correctly set up [`Minikube`](https://minikube.sigs.k8s.io/docs/) and
 section above on how to set variables first (pick reasonable values for the
 `ipfs_storage_volume_size` and `cluster_storage_volume_size` variables)
 
-Once you have installed Minikube, start it locally by running `minikube start`
-(Minikube should configure `kubectl` so that it can communicate with the locally
-created cluster in the process).
+Once you have installed Minikube, start it locally by running
+`minikube start --addons=dashboard,metrics-server,ingress,heapster`. Minikube
+should configure `kubectl` so that it can communicate with the locally created
+cluster in the process. Now, run `minikube tunnel` if you want to be able to use
+the main ingress.
 
 Create a `terraform.tfvars` file under `./terraform/local` and populate it
 following the "Variables" section above.
@@ -144,10 +146,6 @@ way:
   will be put under `./terraform`).
 - Once you have confirmed everything looks right in the Terraform plan, go ahead
   and apply it using `terraform -chdir=./local apply tfplan`.
-
-If you see that Terraform takes a while while creating services, you might need
-to run `minikube tunnel`, while if it gets stuck creating ingresses, you might
-need to run `minikube addons enable ingress`
 
 You should now see Terraform applying your K8s cluster configuration to the
 local Minikube cluster and you should now be able to use `kubectl` as usual to
