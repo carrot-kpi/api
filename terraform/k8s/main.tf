@@ -11,6 +11,7 @@ resource "kubernetes_service_v1" "ipfs_node_internal" {
     }
     port {
       name        = "kubo-gateway"
+      port        = 8080
       target_port = "kubo-gateway"
     }
     port {
@@ -266,15 +267,30 @@ resource "kubernetes_stateful_set" "ipfs_node" {
   }
 }
 
+resource "kubernetes_config_map" "nginx_config" {
+  metadata {
+    name = "nginx-config"
+  }
+  data = {
+    "use-gzip" = "true"
+  }
+}
+
 resource "kubernetes_ingress_v1" "main" {
   metadata {
     name = "api"
-    annotations = var.local ? {} : {
-      "kubernetes.digitalocean.com/load-balancer-id"              = "k8s-balancer"
-      "service.beta.kubernetes.io/do-loadbalancer-certificate-id" = "k8s-balancer"
+    annotations = var.local ? {
+      "nginx.ingress.kubernetes.io/enable-cors"        = "true"
+      "nginx.ingress.kubernetes.io/cors-allow-methods" = "GET, OPTIONS"
+      } : {
+      "kubernetes.digitalocean.com/load-balancer-id"              = "k8s-ingress"
+      "service.beta.kubernetes.io/do-loadbalancer-certificate-id" = "k8s-ingress"
+      "nginx.ingress.kubernetes.io/enable-cors"                   = "true"
+      "nginx.ingress.kubernetes.io/cors-allow-methods"            = "GET, OPTIONS"
     }
   }
   spec {
+    ingress_class_name = "nginx"
     rule {
       host = var.local ? "carrot-kpi.local" : "carrot-kpi.dev"
       http {
