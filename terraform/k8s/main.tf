@@ -6,23 +6,27 @@ resource "kubernetes_service_v1" "ipfs_node_internal" {
     }
   }
   spec {
+    selector = {
+      app = "node"
+    }
     port {
       name        = "kubo-gateway"
       target_port = "kubo-gateway"
-      port        = 8080
+    }
+    port {
+      name        = "kubo-swarm"
+      port        = 4001
+      target_port = "kubo-swarm"
     }
     port {
       name        = "cluster-proxy"
-      target_port = "cluster-proxy"
       port        = 9095
+      target_port = "cluster-proxy"
     }
     port {
       name        = "cluster-swarm"
       port        = 9096
       target_port = "cluster-swarm"
-    }
-    selector = {
-      app = "node"
     }
   }
 }
@@ -68,7 +72,7 @@ resource "kubernetes_stateful_set" "ipfs_node" {
     name = "ipfs-node"
   }
   spec {
-    service_name = "ipfs-node"
+    service_name = "ipfs-node-internal"
     selector {
       match_labels = {
         app = "node"
@@ -102,10 +106,6 @@ resource "kubernetes_stateful_set" "ipfs_node" {
           name              = "kubo"
           image             = "ipfs/kubo:latest"
           image_pull_policy = "IfNotPresent"
-          env {
-            name  = "IPFS_FD_MAX"
-            value = "4096"
-          }
           port {
             name           = "kubo-swarm"
             protocol       = "TCP"
@@ -201,6 +201,32 @@ resource "kubernetes_stateful_set" "ipfs_node" {
             mount_path = "/custom"
           }
         }
+        container {
+          name              = "pinner-gnosis"
+          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.3.1"
+          image_pull_policy = "IfNotPresent"
+          env {
+            name  = "IPFS_API_ENDPOINT"
+            value = "http://localhost:9095"
+          }
+          env {
+            name  = "WS_RPC_ENDPOINT"
+            value = "wss://rpc.gnosischain.com/wss"
+          }
+        }
+        container {
+          name              = "pinner-sepolia"
+          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.3.1"
+          image_pull_policy = "IfNotPresent"
+          env {
+            name  = "IPFS_API_ENDPOINT"
+            value = "http://localhost:9095"
+          }
+          env {
+            name  = "WS_RPC_ENDPOINT"
+            value = "wss://sepolia.infura.io/ws/v3/963198614f2a452e9e4927f94b3320cd"
+          }
+        }
         volume {
           name = "init-scripts"
           config_map {
@@ -242,7 +268,7 @@ resource "kubernetes_stateful_set" "ipfs_node" {
 
 resource "kubernetes_ingress_v1" "main" {
   metadata {
-    name = "ipfs-cluster"
+    name = "api"
     annotations = var.local ? {} : {
       "kubernetes.digitalocean.com/load-balancer-id"              = "k8s-balancer"
       "service.beta.kubernetes.io/do-loadbalancer-certificate-id" = "k8s-balancer"
@@ -256,7 +282,7 @@ resource "kubernetes_ingress_v1" "main" {
           path = "/ipfs"
           backend {
             service {
-              name = "ipfs-node-internal"
+              name = "ipfs-node-internal-service"
               port {
                 name = "kubo-gateway"
               }
