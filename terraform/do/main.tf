@@ -1,7 +1,8 @@
 terraform {
   required_providers {
     digitalocean = {
-      source = "digitalocean/digitalocean"
+      source  = "digitalocean/digitalocean"
+      version = ">= 2.4.0"
     }
   }
 }
@@ -9,36 +10,7 @@ terraform {
 resource "digitalocean_vpc" "k8s" {
   name     = "k8s"
   region   = "nyc1"
-  ip_range = "10.10.10.0/24"
-}
-
-resource "digitalocean_firewall" "k8s" {
-  name = "k8s"
-
-  # enable ipfs swarm
-  inbound_rule {
-    source_kubernetes_ids = digitalocean_kubernetes_cluster.main
-    protocol              = "tcp"
-    port_range            = "4001"
-  }
-
-  outbound_rule {
-    destination_addresses = ["0.0.0.0/0", "::/0"]
-    protocol              = "tcp"
-    port_range            = "4001"
-  }
-
-  inbound_rule {
-    source_kubernetes_ids = digitalocean_kubernetes_cluster.main
-    protocol              = "udp"
-    port_range            = "4002"
-  }
-
-  outbound_rule {
-    destination_addresses = ["0.0.0.0/0", "::/0"]
-    protocol              = "udp"
-    port_range            = "4002"
-  }
+  ip_range = "10.128.0.0/16"
 }
 
 resource "digitalocean_kubernetes_cluster" "main" {
@@ -49,26 +21,21 @@ resource "digitalocean_kubernetes_cluster" "main" {
   vpc_uuid     = digitalocean_vpc.k8s.id
 
   node_pool {
-    name       = "worker-pool"
+    name       = "k8s-node"
     size       = "s-1vcpu-2gb"
     auto_scale = true
     min_nodes  = 1
-    max_nodes  = 3
+    max_nodes  = 2
   }
 }
 
 resource "digitalocean_domain" "main" {
-  name       = "carrot-kpi.dev"
-  ip_address = data.kubernetes_ingress.main.status[0].load_balancer[0].ingress[0].ip
+  name = var.base_api_domain
 }
 
-resource "digitalocean_certificate" "k8s-ingress" {
-  name    = "k8s-ingress"
-  type    = "lets_encrypt"
-  domains = [digitalocean_domain.main.name]
-}
-
-resource "digitalocean_project" "main" {
-  name      = "api"
-  resources = [digitalocean_kubernetes_cluster.main.urn, digitalocean_domain.main.urn]
+resource "digitalocean_record" "ipfs_gateway" {
+  domain = digitalocean_domain.main.name
+  type   = "A"
+  name   = "gateway"
+  value  = var.cluster_ingress_ip
 }

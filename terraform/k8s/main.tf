@@ -1,40 +1,34 @@
-resource "kubernetes_service_v1" "ipfs_node_internal" {
-  metadata {
-    name = "ipfs-node-internal"
-    labels = {
-      app = "ipfs-node-internal"
+terraform {
+  required_providers {
+    kubectl = {
+      source  = "gavinbunney/kubectl"
+      version = ">= 1.14.0"
     }
   }
-  spec {
-    selector = {
-      app = "node"
-    }
-    port {
-      name        = "kubo-gateway"
-      port        = 8080
-      target_port = "kubo-gateway"
-    }
-    port {
-      name        = "kubo-swarm"
-      port        = 4001
-      target_port = "kubo-swarm"
-    }
-    port {
-      name        = "cluster-proxy"
-      port        = 9095
-      target_port = "cluster-proxy"
-    }
-    port {
-      name        = "cluster-swarm"
-      port        = 9096
-      target_port = "cluster-swarm"
-    }
+}
+
+resource "kubernetes_namespace" "api" {
+  metadata {
+    name = "api"
+  }
+}
+
+resource "kubernetes_secret" "ipfs_node" {
+  metadata {
+    name      = "ipfs-node"
+    namespace = kubernetes_namespace.api.metadata.0.name
+  }
+
+  data = {
+    bootstrap_peer_private_key = var.bootstrap_peer_private_key
+    cluster_secret             = var.cluster_secret
   }
 }
 
 resource "kubernetes_config_map" "init_scripts" {
   metadata {
-    name = "init-scripts"
+    name      = "init-scripts"
+    namespace = kubernetes_namespace.api.metadata.0.name
   }
 
   data = {
@@ -43,34 +37,10 @@ resource "kubernetes_config_map" "init_scripts" {
   }
 }
 
-resource "kubernetes_horizontal_pod_autoscaler_v2" "ipfs_node" {
-  metadata {
-    name = "ipfs-node"
-  }
-  spec {
-    scale_target_ref {
-      api_version = "apps/v1"
-      kind        = "StatefulSet"
-      name        = "ipfs-node"
-    }
-    min_replicas = 2
-    max_replicas = 3
-    metric {
-      type = "Resource"
-      resource {
-        name = "cpu"
-        target {
-          type                = "Utilization"
-          average_utilization = 85
-        }
-      }
-    }
-  }
-}
-
 resource "kubernetes_stateful_set" "ipfs_node" {
   metadata {
-    name = "ipfs-node"
+    name      = "ipfs-node"
+    namespace = kubernetes_namespace.api.metadata.0.name
   }
   spec {
     service_name = "ipfs-node-internal"
@@ -79,6 +49,7 @@ resource "kubernetes_stateful_set" "ipfs_node" {
         app = "node"
       }
     }
+    replicas = 2
     template {
       metadata {
         labels = {
@@ -90,14 +61,6 @@ resource "kubernetes_stateful_set" "ipfs_node" {
           name    = "init-kubo"
           image   = "ipfs/kubo:latest"
           command = ["sh", "/custom/init-kubo.sh"]
-          resources {
-            limits = {
-              cpu = "500m"
-            }
-            requests = {
-              cpu = "250m"
-            }
-          }
           volume_mount {
             name       = "init-scripts"
             mount_path = "/custom"
@@ -130,14 +93,6 @@ resource "kubernetes_stateful_set" "ipfs_node" {
             timeout_seconds       = 5
             period_seconds        = 15
           }
-          resources {
-            limits = {
-              cpu = "500m"
-            }
-            requests = {
-              cpu = "250m"
-            }
-          }
           volume_mount {
             name       = "ipfs-storage"
             mount_path = "/data/ipfs"
@@ -152,12 +107,26 @@ resource "kubernetes_stateful_set" "ipfs_node" {
           image   = "ipfs/ipfs-cluster:latest"
           command = ["sh", "/custom/init-cluster.sh"]
           env {
-            name  = "BOOTSTRAP_PEER_PRIVATE_KEY"
-            value = var.bootstrap_peer_private_key
+            name  = "SERVICE_NAME"
+            value = kubernetes_service_v1.ipfs_node.metadata.0.name
           }
           env {
-            name  = "CLUSTER_SECRET"
-            value = var.cluster_secret
+            name = "BOOTSTRAP_PEER_PRIVATE_KEY"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.ipfs_node.metadata.0.name
+                key  = "bootstrap_peer_private_key"
+              }
+            }
+          }
+          env {
+            name = "CLUSTER_SECRET"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.ipfs_node.metadata.0.name
+                key  = "cluster_secret"
+              }
+            }
           }
           env {
             name  = "CLUSTER_MONITOR_PING_INTERVAL"
@@ -176,14 +145,6 @@ resource "kubernetes_stateful_set" "ipfs_node" {
             name           = "cluster-swarm"
             protocol       = "TCP"
             container_port = 9096
-          }
-          resources {
-            limits = {
-              cpu = "500m"
-            }
-            requests = {
-              cpu = "250m"
-            }
           }
           liveness_probe {
             tcp_socket {
@@ -238,7 +199,8 @@ resource "kubernetes_stateful_set" "ipfs_node" {
     }
     volume_claim_template {
       metadata {
-        name = "cluster-storage"
+        name      = "cluster-storage"
+        namespace = kubernetes_namespace.api.metadata.0.name
       }
       spec {
         storage_class_name = var.persistent_volume_storage_class
@@ -252,7 +214,8 @@ resource "kubernetes_stateful_set" "ipfs_node" {
     }
     volume_claim_template {
       metadata {
-        name = "ipfs-storage"
+        name      = "ipfs-storage"
+        namespace = kubernetes_namespace.api.metadata.0.name
       }
       spec {
         storage_class_name = var.persistent_volume_storage_class
@@ -267,40 +230,119 @@ resource "kubernetes_stateful_set" "ipfs_node" {
   }
 }
 
-resource "kubernetes_config_map" "nginx_config" {
-  metadata {
-    name = "nginx-config"
+resource "helm_release" "nginx_ingress" {
+  name             = "nginx-ingress"
+  repository       = "https://kubernetes.github.io/ingress-nginx"
+  chart            = "ingress-nginx"
+  namespace        = "nginx"
+  create_namespace = true
+
+  set {
+    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/do-loadbalancer-name"
+    value = "k8s-ingress"
   }
-  data = {
-    "use-gzip" = "true"
+
+  values = [
+    file("${path.module}/charts/nginx-ingress-values.yaml")
+  ]
+}
+
+resource "helm_release" "cert_manager" {
+  count = var.local ? 0 : 1
+
+  name             = "cert-manager"
+  repository       = "https://charts.jetstack.io"
+  chart            = "cert-manager"
+  namespace        = "cert-manager"
+  create_namespace = true
+
+  set {
+    name  = "installCRDs"
+    value = "true"
   }
 }
 
-resource "kubernetes_ingress_v1" "main" {
+resource "kubectl_manifest" "letsencrypt_issuer_staging" {
+  count = var.local ? 0 : 1
+
+  yaml_body = templatefile("${path.module}/resources/cert-issuer-staging.yaml", {
+    namespace = kubernetes_namespace.api.metadata.0.name
+  })
+
+  depends_on = [
+    helm_release.cert_manager
+  ]
+}
+
+resource "kubectl_manifest" "letsencrypt_issuer_prod" {
+  count = var.local ? 0 : 1
+
+  yaml_body = templatefile("${path.module}/resources/cert-issuer-prod.yaml", {
+    namespace = kubernetes_namespace.api.metadata.0.name
+  })
+
+  depends_on = [
+    helm_release.cert_manager
+  ]
+}
+
+resource "kubernetes_service_v1" "ipfs_node" {
   metadata {
-    name = "api"
-    annotations = var.local ? {
-      "nginx.ingress.kubernetes.io/enable-cors"        = "true"
-      "nginx.ingress.kubernetes.io/cors-allow-methods" = "GET, OPTIONS"
-      } : {
-      "kubernetes.digitalocean.com/load-balancer-id"              = "k8s-ingress"
-      "service.beta.kubernetes.io/do-loadbalancer-certificate-id" = "k8s-ingress"
-      "nginx.ingress.kubernetes.io/enable-cors"                   = "true"
-      "nginx.ingress.kubernetes.io/cors-allow-methods"            = "GET, OPTIONS"
+    name      = "ipfs-node"
+    namespace = kubernetes_namespace.api.metadata.0.name
+  }
+  spec {
+    selector = {
+      app = "node"
+    }
+    port {
+      name        = "kubo-gateway"
+      port        = 8080
+      target_port = "kubo-gateway"
+    }
+    port {
+      name        = "kubo-swarm"
+      port        = 4001
+      target_port = "kubo-swarm"
+    }
+    port {
+      name        = "cluster-swarm"
+      port        = 9096
+      target_port = "cluster-swarm"
+    }
+  }
+}
+
+locals {
+  ipfs_gateway_domain = "gateway.${var.base_api_domain}"
+}
+
+resource "kubernetes_ingress_v1" "main" {
+  wait_for_load_balancer = true
+  metadata {
+    name      = "api"
+    namespace = kubernetes_namespace.api.metadata.0.name
+    annotations = {
+      "kubernetes.io/ingress.class" = "nginx"
+      "cert-manager.io/issuer"      = "letsencrypt-prod"
     }
   }
   spec {
-    ingress_class_name = "nginx"
+    tls {
+      hosts       = [local.ipfs_gateway_domain]
+      secret_name = "ingress-tls"
+    }
     rule {
-      host = var.local ? "carrot-kpi.local" : "carrot-kpi.dev"
+      host = local.ipfs_gateway_domain
       http {
         path {
-          path = "/ipfs"
+          path      = "/ipfs"
+          path_type = "Prefix"
           backend {
             service {
-              name = "ipfs-node-internal-service"
+              name = kubernetes_service_v1.ipfs_node.metadata.0.name
               port {
-                name = "kubo-gateway"
+                number = 8080
               }
             }
           }
@@ -308,4 +350,11 @@ resource "kubernetes_ingress_v1" "main" {
       }
     }
   }
+
+  depends_on = [
+    helm_release.nginx_ingress,
+    helm_release.cert_manager,
+    kubectl_manifest.letsencrypt_issuer_staging,
+    kubectl_manifest.letsencrypt_issuer_prod
+  ]
 }

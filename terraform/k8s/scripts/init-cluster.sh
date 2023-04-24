@@ -11,5 +11,5 @@ if [ "$(cat /proc/sys/kernel/hostname)" == "ipfs-node-0" ]; then
     CLUSTER_PRIVATEKEY=${BOOTSTRAP_PEER_PRIVATE_KEY} \
     exec ipfs-cluster-service daemon --upgrade --leave
 else
-    exec ipfs-cluster-service daemon --upgrade --bootstrap /dns4/ipfs-node-internal.default.svc.cluster.local/tcp/9096/ipfs/${BOOTSTRAP_PEER_ID} --leave
+    exec ipfs-cluster-service daemon --upgrade --bootstrap /dns4/ipfs-node.api.svc.cluster.local/tcp/9096/ipfs/${BOOTSTRAP_PEER_ID} --leave
 fi

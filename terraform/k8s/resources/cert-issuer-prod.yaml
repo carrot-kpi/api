@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: letsencrypt-prod
+  namespace: ${namespace}
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: info@carrot-kpi.dev
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
