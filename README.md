@@ -103,7 +103,7 @@ are:
   (defaults to 100Mb for local deployment and 5Gb for remote deployment).
 
 The other group of variables is strictly related to IPFS' setup, and all of them
-can be generated using (`ipfs-key`)[https://github.com/whyrusleeping/ipfs-key]
+can be generated using [`ipfs-key`](https://github.com/whyrusleeping/ipfs-key)
 and a few other tricks.
 
 Let's see how you can install `ipfs-key` in order to generate the necessary
