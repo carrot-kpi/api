@@ -133,6 +133,10 @@ resource "kubernetes_stateful_set" "ipfs_node" {
             value = "3m"
           }
           env {
+            name  = "CLUSTER_IPFSPROXY_LISTENMULTIADDRESS"
+            value = "/ip4/0.0.0.0/tcp/9095"
+          }
+          env {
             name  = "BOOTSTRAP_PEER_ID"
             value = var.bootstrap_peer_id
           }
@@ -161,32 +165,6 @@ resource "kubernetes_stateful_set" "ipfs_node" {
           volume_mount {
             name       = "init-scripts"
             mount_path = "/custom"
-          }
-        }
-        container {
-          name              = "pinner-gnosis"
-          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.3.1"
-          image_pull_policy = "IfNotPresent"
-          env {
-            name  = "IPFS_API_ENDPOINT"
-            value = "http://localhost:9095"
-          }
-          env {
-            name  = "WS_RPC_ENDPOINT"
-            value = "wss://rpc.gnosischain.com/wss"
-          }
-        }
-        container {
-          name              = "pinner-sepolia"
-          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.3.1"
-          image_pull_policy = "IfNotPresent"
-          env {
-            name  = "IPFS_API_ENDPOINT"
-            value = "http://localhost:9095"
-          }
-          env {
-            name  = "WS_RPC_ENDPOINT"
-            value = "wss://sepolia.infura.io/ws/v3/963198614f2a452e9e4927f94b3320cd"
           }
         }
         volume {
@@ -228,6 +206,59 @@ resource "kubernetes_stateful_set" "ipfs_node" {
       }
     }
   }
+}
+
+resource "kubernetes_deployment" "ipfs_pinner" {
+  metadata {
+    name      = "ipfs-pinner"
+    namespace = kubernetes_namespace.api.metadata.0.name
+  }
+  spec {
+    selector {
+      match_labels = {
+        app = "pinner"
+      }
+    }
+    template {
+      metadata {
+        labels = {
+          app = "pinner"
+        }
+      }
+      spec {
+        container {
+          name              = "pinner-gnosis"
+          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.3.1"
+          image_pull_policy = "IfNotPresent"
+          env {
+            name  = "IPFS_API_ENDPOINT"
+            value = "http://ipfs-node:9095"
+          }
+          env {
+            name  = "WS_RPC_ENDPOINT"
+            value = "wss://rpc.gnosischain.com/wss"
+          }
+        }
+        container {
+          name              = "pinner-sepolia"
+          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.3.1"
+          image_pull_policy = "IfNotPresent"
+          env {
+            name  = "IPFS_API_ENDPOINT"
+            value = "http://ipfs-node:9095"
+          }
+          env {
+            name  = "WS_RPC_ENDPOINT"
+            value = "wss://sepolia.infura.io/ws/v3/963198614f2a452e9e4927f94b3320cd"
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [
+    kubernetes_stateful_set.ipfs_node
+  ]
 }
 
 resource "helm_release" "nginx_ingress" {
@@ -309,6 +340,11 @@ resource "kubernetes_service_v1" "ipfs_node" {
       name        = "cluster-swarm"
       port        = 9096
       target_port = "cluster-swarm"
+    }
+    port {
+      name        = "cluster-proxy"
+      port        = 9095
+      target_port = "cluster-proxy"
     }
   }
 }
