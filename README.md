@@ -1,3 +1,22 @@
+<br />
+
+<p align="center">
+    <img src=".github/static/logo.svg" alt="Carrot logo" width="60%" />
+</p>
+
+<br />
+
+<p align="center">
+    Carrot is a web3 protocol trying to make incentivization easier and more capital
+    efficient.
+</p>
+
+<br />
+
+<p align="center">
+    <img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3">
+</p>
+
 # Carrot API
 
 This repository is a collection of files used to manage Carrot KPI's API
@@ -34,6 +53,10 @@ following resources are created:
   - `IPFS cluster`: a sidecar service that allows orchestrating pinning across
     various IPFS nodes so that everything is always up to date across
     potentially many nodes.
+- **IPFS pinner deployment**: a `kubernetes_deployment` resource responsible to
+  bootstrap and manage an
+  [IPFS pinner](https://github.com/carrot-kpi/ipfs-pinner) instance for each
+  supported chain.
 - **NGINX ingress**: a `helm_release` that installs the NGINX ingress server
   theough which the main ingress load balancer is bootstrapped. A few custom
   annotations are applied to govern DigitalOcean's behavior when instantiating
