@@ -39,3 +39,10 @@ resource "digitalocean_record" "ipfs_gateway" {
   name   = "gateway"
   value  = var.cluster_ingress_ip
 }
+
+resource "digitalocean_record" "token_list" {
+  domain = digitalocean_domain.main.name
+  type   = "A"
+  name   = "tokens"
+  value  = var.cluster_ingress_ip
+}

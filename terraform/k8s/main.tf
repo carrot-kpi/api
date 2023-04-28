@@ -353,10 +353,10 @@ locals {
   ipfs_gateway_domain = "gateway.${var.base_api_domain}"
 }
 
-resource "kubernetes_ingress_v1" "main" {
+resource "kubernetes_ingress_v1" "ipfs_gateway" {
   wait_for_load_balancer = true
   metadata {
-    name      = "api"
+    name      = "ipfs-gateway"
     namespace = kubernetes_namespace.api.metadata.0.name
     annotations = {
       "kubernetes.io/ingress.class" = "nginx"
@@ -366,7 +366,7 @@ resource "kubernetes_ingress_v1" "main" {
   spec {
     tls {
       hosts       = [local.ipfs_gateway_domain]
-      secret_name = "ingress-tls"
+      secret_name = "ipfs-gateway-ingress-tls"
     }
     rule {
       host = local.ipfs_gateway_domain
@@ -379,6 +379,149 @@ resource "kubernetes_ingress_v1" "main" {
               name = kubernetes_service_v1.ipfs_node.metadata.0.name
               port {
                 number = 8080
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [
+    helm_release.nginx_ingress,
+    helm_release.cert_manager,
+    kubectl_manifest.letsencrypt_issuer_staging,
+    kubectl_manifest.letsencrypt_issuer_prod
+  ]
+}
+
+resource "kubernetes_config_map" "static_server_nginx_config" {
+  metadata {
+    name      = "static-server-nginx-config"
+    namespace = kubernetes_namespace.api.metadata.0.name
+  }
+  data = {
+    "default.conf" = file("${path.module}/nginx/static-server.conf")
+  }
+}
+
+resource "null_resource" "build_token_list" {
+  provisioner "local-exec" {
+    command = "cd ${path.module}/token-list && yarn install --frozen-lockfile && node ./scripts/build.js"
+  }
+}
+
+resource "kubernetes_config_map" "static_files" {
+  metadata {
+    name      = "static-server-static-files"
+    namespace = kubernetes_namespace.api.metadata.0.name
+  }
+  data = {
+    "tokens.json" = file("${path.module}/token-list/out/list.json")
+  }
+
+  depends_on = [null_resource.build_token_list]
+}
+
+resource "kubernetes_deployment" "static_server" {
+  metadata {
+    name      = "static-server"
+    namespace = kubernetes_namespace.api.metadata.0.name
+  }
+  spec {
+    selector {
+      match_labels = {
+        app = "static-server"
+      }
+    }
+    replicas = 1
+    template {
+      metadata {
+        labels = {
+          app = "static-server"
+        }
+      }
+      spec {
+        container {
+          name  = "nginx"
+          image = "nginx:latest"
+          port {
+            container_port = 80
+          }
+          volume_mount {
+            name       = "config"
+            mount_path = "/etc/nginx/conf.d"
+          }
+          volume_mount {
+            name       = "static-files"
+            mount_path = "/usr/share/nginx/html"
+          }
+        }
+        volume {
+          name = "config"
+          config_map {
+            name = kubernetes_config_map.static_server_nginx_config.metadata.0.name
+          }
+        }
+        volume {
+          name = "static-files"
+          config_map {
+            name = kubernetes_config_map.static_files.metadata.0.name
+          }
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_service" "static_server" {
+  metadata {
+    name      = "static-server"
+    namespace = kubernetes_namespace.api.metadata.0.name
+  }
+  spec {
+    selector = {
+      app = "static-server"
+    }
+    port {
+      name        = "http"
+      port        = 80
+      target_port = 80
+    }
+  }
+}
+
+
+locals {
+  token_list_domain = "tokens.${var.base_api_domain}"
+}
+
+resource "kubernetes_ingress_v1" "token_list" {
+  wait_for_load_balancer = true
+  metadata {
+    name      = "token-list"
+    namespace = kubernetes_namespace.api.metadata.0.name
+    annotations = {
+      "kubernetes.io/ingress.class" = "nginx"
+      "cert-manager.io/issuer"      = "letsencrypt-prod"
+    }
+  }
+  spec {
+    tls {
+      hosts       = [local.token_list_domain]
+      secret_name = "token-list-ingress-tls"
+    }
+    rule {
+      host = local.token_list_domain
+      http {
+        path {
+          path      = "/"
+          path_type = "Prefix"
+          backend {
+            service {
+              name = kubernetes_service.static_server.metadata.0.name
+              port {
+                name = "http"
               }
             }
           }

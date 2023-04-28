@@ -1,0 +1,3 @@
+[submodule "terraform/k8s/token-list"]
+	path = terraform/k8s/token-list
+	url = https://github.com/carrot-kpi/token-list
