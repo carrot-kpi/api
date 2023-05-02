@@ -81,7 +81,7 @@ following resources are created:
   certificate issuer.
 - **NGINX configuration config map**: this config map is used to mount the
   `nginx` static server configuration under `/etc/nginx/conf.d` so that it can
-  be picked up by the `nginx` container. static files can be served by it.
+  be picked up by the `nginx` container. Static files can be served by it.
 - **Build token list null resource**: an empty resource used to trigger a build
   of the token list in the token list repo submodule and nothing else.
 - **Static files config map**: this config map is used to mount static files in
