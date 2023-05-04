@@ -43,6 +43,10 @@ following resources are created:
   A record to the API domain to correctly point to the cluster's ingress load
   balancer, once deployed. The A record's hostname is `gateway` (it will access
   the IPFS gateway API).
+- **Token list domain A record setting**: a `digitalocean_record` that will add
+  an A record to the API domain to correctly point to the cluster's ingress load
+  balancer, once deployed. The A record's hostname is `tokens` (it will access
+  the token list served through the static server).
 - **Initizalization scripts config map**: a config map to mount initialization
   scripts into the IPFS node pods so that both Kubo and IPFS cluster can
   correctly be set up.
@@ -71,8 +75,27 @@ following resources are created:
 - **IPFS node service**: a `kubernetes_service_v1` internal service that allows
   internal communication between nodes and external communication to Kubo's
   gateway API through the ingress load balancer rules.
-- **Ingress**: the main ingress allows API users to access the API from the
-  internet. It leverages the NGINX ingress controller and the Let's Encrypt prod
+- **IPFS gateway ingress**: an ingress that allows calls to the
+  `gateway.<base-api-domain>` host to be redirected to the backend IPFS node
+  service. It leverages the NGINX ingress controller and the Let's Encrypt prod
+  certificate issuer.
+- **NGINX configuration config map**: this config map is used to mount the
+  `nginx` static server configuration under `/etc/nginx/conf.d` so that it can
+  be picked up by the `nginx` container. Static files can be served by it.
+- **Build token list null resource**: an empty resource used to trigger a build
+  of the token list in the token list repo submodule and nothing else.
+- **Static files config map**: this config map is used to mount static files in
+  the `nginx` static server under `/usr/share/nginx/html` so that static files
+  can be served by it.
+- **Static server deployment**: a deployment for a `nginx` server used to serve
+  static files. The configuration is mounted through the `nginx` configuration
+  config map mentioned above and static files through the static files config
+  map mentioned above.
+- **Static server service**: an internal service used to communicate with the
+  static server.
+- **Token list ingress**: an ingress that allows calls to the
+  `tokens.<base-api-domain>` host to be redirected to the backend static server
+  service. It leverages the NGINX ingress controller and the Let's Encrypt prod
   certificate issuer.
 
 It's worth noting that even the Kubernetes cluster configuration is managed

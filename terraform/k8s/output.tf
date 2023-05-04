@@ -1,6 +1,6 @@
 data "kubernetes_ingress_v1" "main" {
   metadata {
-    name = "api"
+    name      = kubernetes_ingress_v1.ipfs_gateway.metadata.0.name
     namespace = kubernetes_namespace.api.metadata.0.name
   }
 }
