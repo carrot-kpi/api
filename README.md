@@ -29,8 +29,13 @@ cluster.
 
 Under the `./terraform` folder you can find the Terraform files used to
 bootstrap the needed infrastructure (ignore the `./local` folder for now). The
-following resources are created:
+following main resources are created:
 
+- **S3 bucket**: a `aws_s3_bucket` is created to store certain resources.
+- **S3 bucket object**: a `aws_s3_bucket_object` is created to store the hero
+  video in the previously created S3 bucket.
+- **Cloudfront distribution**: a `aws_cloudfront_distribution` is created to
+  serve contents from the previously created S3 bucket.
 - **Cluster VPC**: a `digitalocean_vpc` for the cluster.
 - **Kubernetes cluster**: the `digitalocean_kubernetes_cluster` resource that
   will actually run the K8s cluster, with autoscaling enabled going from a
@@ -166,6 +171,12 @@ by Terraform when executing for example the `apply` command.
 > **Warning** Absolutely make sure the `tfvars` files are not included in
 > version control as they contain sensitive data. A `.gitignore` rule should
 > take care of that, but be extra cautious.
+
+In addition to the above, it's necessary to have AWS credentials configured
+locally in order to perform the remote deployment. See
+[here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html)
+on how to create the file and be sure to have it ready before applying the
+Terraform config.
 
 ## Deploying the Kubernetes cluster locally
 
