@@ -228,7 +228,7 @@ resource "kubernetes_deployment" "ipfs_pinner" {
       spec {
         container {
           name              = "pinner-gnosis"
-          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.4.0"
+          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.4.1"
           image_pull_policy = "IfNotPresent"
           env {
             name  = "IPFS_API_ENDPOINT"
@@ -241,7 +241,7 @@ resource "kubernetes_deployment" "ipfs_pinner" {
         }
         container {
           name              = "pinner-sepolia"
-          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.4.0"
+          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.4.1"
           image_pull_policy = "IfNotPresent"
           env {
             name  = "IPFS_API_ENDPOINT"
@@ -254,7 +254,7 @@ resource "kubernetes_deployment" "ipfs_pinner" {
         }
         container {
           name              = "pinner-arbitrum-goerli"
-          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.4.0"
+          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.4.1"
           image_pull_policy = "IfNotPresent"
           env {
             name  = "IPFS_API_ENDPOINT"
