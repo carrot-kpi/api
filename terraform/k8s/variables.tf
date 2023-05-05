@@ -6,6 +6,12 @@ variable "cluster_secret" {}
 
 variable "base_api_domain" {}
 
+variable "ws_rpc_url_sepolia" {}
+
+variable "ws_rpc_url_gnosis" {}
+
+variable "ws_rpc_url_arbitrum_goerli" {}
+
 variable "ipfs_storage_volume_size" {}
 
 variable "cluster_storage_volume_size" {}

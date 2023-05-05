@@ -228,7 +228,7 @@ resource "kubernetes_deployment" "ipfs_pinner" {
       spec {
         container {
           name              = "pinner-gnosis"
-          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.3.1"
+          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.4.0"
           image_pull_policy = "IfNotPresent"
           env {
             name  = "IPFS_API_ENDPOINT"
@@ -236,12 +236,12 @@ resource "kubernetes_deployment" "ipfs_pinner" {
           }
           env {
             name  = "WS_RPC_ENDPOINT"
-            value = "wss://rpc.gnosischain.com/wss"
+            value = var.ws_rpc_url_gnosis
           }
         }
         container {
           name              = "pinner-sepolia"
-          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.3.1"
+          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.4.0"
           image_pull_policy = "IfNotPresent"
           env {
             name  = "IPFS_API_ENDPOINT"
@@ -249,7 +249,20 @@ resource "kubernetes_deployment" "ipfs_pinner" {
           }
           env {
             name  = "WS_RPC_ENDPOINT"
-            value = "wss://sepolia.infura.io/ws/v3/963198614f2a452e9e4927f94b3320cd"
+            value = var.ws_rpc_url_sepolia
+          }
+        }
+        container {
+          name              = "pinner-arbitrum-goerli"
+          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.4.0"
+          image_pull_policy = "IfNotPresent"
+          env {
+            name  = "IPFS_API_ENDPOINT"
+            value = "http://ipfs-node:9095"
+          }
+          env {
+            name  = "WS_RPC_ENDPOINT"
+            value = var.ws_rpc_url_arbitrum_goerli
           }
         }
       }
