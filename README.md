@@ -123,6 +123,12 @@ are:
   [here](https://docs.digitalocean.com/reference/api/create-personal-access-token/)
   for how to create one.
 - `api_domain`: the domain that will point to the API ingress.
+- `ws_rpc_url_sepolia`: a websocket RPC URL to index contract events on Sepolia
+  (needed by the IPFS pinner).
+- `ws_rpc_url_gnosis`: a websocket RPC URL to index contract events on Gnosis
+  (needed by the IPFS pinner).
+- `ws_rpc_url_arbitrum_goerli`: a websocket RPC URL to index contract events on
+  Arbitrum Goerli (needed by the IPFS pinner).
 - `ipfs_storage_volume_size (optional)`: self-describing, this instructs K8s on
   the size of the IPFS storage volume to assign to each IPFS node (defaults to
   100Mb for local deployment and 20Gb for remote deployment).
