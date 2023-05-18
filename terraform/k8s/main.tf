@@ -43,7 +43,7 @@ resource "kubernetes_stateful_set" "ipfs_node" {
     namespace = kubernetes_namespace.api.metadata.0.name
   }
   spec {
-    service_name = "ipfs-node-internal"
+    service_name = "ipfs-node"
     selector {
       match_labels = {
         app = "node"
@@ -71,8 +71,13 @@ resource "kubernetes_stateful_set" "ipfs_node" {
           image             = "ipfs/kubo:latest"
           image_pull_policy = "IfNotPresent"
           port {
-            name           = "kubo-swarm"
+            name           = "kubo-swarm-tcp"
             protocol       = "TCP"
+            container_port = 4001
+          }
+          port {
+            name           = "kubo-swarm-udp"
+            protocol       = "UDP"
             container_port = 4001
           }
           port {
@@ -87,7 +92,7 @@ resource "kubernetes_stateful_set" "ipfs_node" {
           }
           liveness_probe {
             tcp_socket {
-              port = "kubo-swarm"
+              port = "kubo-swarm-tcp"
             }
             initial_delay_seconds = 5
             timeout_seconds       = 5
@@ -345,9 +350,16 @@ resource "kubernetes_service_v1" "ipfs_node" {
       target_port = "kubo-gateway"
     }
     port {
-      name        = "kubo-swarm"
+      name        = "kubo-swarm-udp"
+      protocol    = "UDP"
       port        = 4001
-      target_port = "kubo-swarm"
+      target_port = "kubo-swarm-udp"
+    }
+    port {
+      name        = "kubo-swarm-tcp"
+      protocol    = "TCP"
+      port        = 4001
+      target_port = "kubo-swarm-tcp"
     }
     port {
       name        = "cluster-swarm"
@@ -358,6 +370,58 @@ resource "kubernetes_service_v1" "ipfs_node" {
       name        = "cluster-proxy"
       port        = 9095
       target_port = "cluster-proxy"
+    }
+  }
+}
+
+resource "kubernetes_service_v1" "ipfs_node_0_swarm" {
+  metadata {
+    name      = "ipfs-node-0-swarm"
+    namespace = kubernetes_namespace.api.metadata.0.name
+  }
+  spec {
+    type = "LoadBalancer"
+    selector = {
+      app = "node"
+      "statefulset.kubernetes.io/pod-name" : "ipfs-node-0"
+    }
+    port {
+      name        = "kubo-swarm-udp"
+      port        = 4001
+      protocol    = "UDP"
+      target_port = "kubo-swarm-udp"
+    }
+    port {
+      name        = "kubo-swarm-tcp"
+      port        = 4001
+      protocol    = "TCP"
+      target_port = "kubo-swarm-tcp"
+    }
+  }
+}
+
+resource "kubernetes_service_v1" "ipfs_node_1_swarm" {
+  metadata {
+    name      = "ipfs-node-1-swarm"
+    namespace = kubernetes_namespace.api.metadata.0.name
+  }
+  spec {
+    type = "LoadBalancer"
+    selector = {
+      app = "node"
+      "statefulset.kubernetes.io/pod-name" : "ipfs-node-1"
+    }
+    port {
+      name        = "kubo-swarm-udp"
+      port        = 4001
+      protocol    = "UDP"
+      target_port = "kubo-swarm-udp"
+    }
+    port {
+      name        = "kubo-swarm-tcp"
+      port        = 4001
+      protocol    = "TCP"
+      target_port = "kubo-swarm-tcp"
     }
   }
 }
