@@ -10,7 +10,7 @@ variable "ws_rpc_url_sepolia" {}
 
 variable "ws_rpc_url_gnosis" {}
 
-variable "ws_rpc_url_arbitrum_goerli" {}
+variable "ws_rpc_url_scroll_testnet" {}
 
 variable "ipfs_storage_volume_size" {}
 

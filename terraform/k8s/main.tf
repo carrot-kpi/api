@@ -233,7 +233,7 @@ resource "kubernetes_deployment" "ipfs_pinner" {
       spec {
         container {
           name              = "pinner-gnosis"
-          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.4.1"
+          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.5.0"
           image_pull_policy = "IfNotPresent"
           env {
             name  = "IPFS_API_ENDPOINT"
@@ -246,7 +246,7 @@ resource "kubernetes_deployment" "ipfs_pinner" {
         }
         container {
           name              = "pinner-sepolia"
-          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.4.1"
+          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.5.0"
           image_pull_policy = "IfNotPresent"
           env {
             name  = "IPFS_API_ENDPOINT"
@@ -258,8 +258,8 @@ resource "kubernetes_deployment" "ipfs_pinner" {
           }
         }
         container {
-          name              = "pinner-arbitrum-goerli"
-          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.4.1"
+          name              = "pinner-scroll-testnet"
+          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.5.0"
           image_pull_policy = "IfNotPresent"
           env {
             name  = "IPFS_API_ENDPOINT"
@@ -267,7 +267,7 @@ resource "kubernetes_deployment" "ipfs_pinner" {
           }
           env {
             name  = "WS_RPC_ENDPOINT"
-            value = var.ws_rpc_url_arbitrum_goerli
+            value = var.ws_rpc_url_scroll_testnet
           }
         }
       }

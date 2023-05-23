@@ -68,7 +68,7 @@ module "k8s" {
   base_api_domain                 = var.base_api_domain
   ws_rpc_url_sepolia              = var.ws_rpc_url_sepolia
   ws_rpc_url_gnosis               = var.ws_rpc_url_gnosis
-  ws_rpc_url_arbitrum_goerli      = var.ws_rpc_url_arbitrum_goerli
+  ws_rpc_url_scroll_testnet       = var.ws_rpc_url_scroll_testnet
   local                           = false
   ipfs_storage_volume_size        = var.ipfs_storage_volume_size
   cluster_storage_volume_size     = var.cluster_storage_volume_size
