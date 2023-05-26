@@ -482,12 +482,6 @@ resource "kubernetes_config_map" "static_server_nginx_config" {
   }
 }
 
-resource "null_resource" "build_token_list" {
-  provisioner "local-exec" {
-    command = "cd ${path.module}/token-list && yarn install --frozen-lockfile && node ./scripts/build.js"
-  }
-}
-
 resource "kubernetes_config_map" "static_files" {
   metadata {
     name      = "static-server-static-files"
@@ -496,8 +490,6 @@ resource "kubernetes_config_map" "static_files" {
   data = {
     "tokens.json" = file("${path.module}/token-list/out/list.json")
   }
-
-  depends_on = [null_resource.build_token_list]
 }
 
 resource "kubernetes_deployment" "static_server" {
