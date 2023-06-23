@@ -15,7 +15,7 @@ resource "digitalocean_vpc" "k8s" {
 
 resource "digitalocean_kubernetes_cluster" "main" {
   name         = "api"
-  version      = "1.26.3-do.0"
+  version      = "1.26.5-do.0"
   region       = "nyc1"
   auto_upgrade = true
   vpc_uuid     = digitalocean_vpc.k8s.id
