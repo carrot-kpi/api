@@ -11,7 +11,7 @@ interface InitializeDatabaseParams {
 export const initializeDatabase = async ({
     connectionString,
 }: InitializeDatabaseParams): Promise<Client> => {
-    const client = await new Client({ connectionString });
+    const client = new Client({ connectionString });
     await client.connect();
     await client.query(
         `CREATE TABLE IF NOT EXISTS nonces (address VARCHAR(42) PRIMARY KEY, value VARCHAR(${
