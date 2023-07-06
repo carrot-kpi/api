@@ -19,11 +19,6 @@ export const getLoginMessageRoute = ({
         options: {
             plugins: {
                 "hapi-swagger": {
-                    description:
-                        "Updates or creates a new nonce for a given address (user), " +
-                        "and returns the login message that a user needs to sign in order " +
-                        "to authenticate, with the nonce baked in. This is used in order " +
-                        "to avoid signature replay attacks.",
                     responses: {
                         400: {
                             description:
@@ -42,6 +37,11 @@ export const getLoginMessageRoute = ({
                     },
                 },
             },
+            description:
+                "Updates or creates a new nonce for a given address (user), " +
+                "and returns the login message that a user needs to sign in order " +
+                "to authenticate, with the nonce baked in. This is used in order " +
+                "to avoid signature replay attacks.",
             auth: false,
             tags: ["api"],
             validate: {

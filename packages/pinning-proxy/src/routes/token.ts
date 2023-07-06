@@ -23,9 +23,6 @@ export const getTokenRoute = ({
         options: {
             plugins: {
                 "hapi-swagger": {
-                    description:
-                        "Generates a new JWT token for a given user, and returns it." +
-                        "The token will be valid for 24 hours",
                     responses: {
                         400: {
                             description:
@@ -41,6 +38,9 @@ export const getTokenRoute = ({
                     },
                 },
             },
+            description:
+                "Generates a new JWT token for a given user, and returns it." +
+                "The token will be valid for 24 hours",
             auth: false,
             tags: ["api"],
             validate: {

@@ -18,11 +18,6 @@ export const getPinsRoute = ({
         options: {
             plugins: {
                 "hapi-swagger": {
-                    payloadType: "form",
-                    description:
-                        "Stores text-like data on the Carrot IPFS nodes. " +
-                        "The data is converted to text before the storing happens, " +
-                        "so trying to store binary data won't end with the expected result.",
                     responses: {
                         400: {
                             description: "The request was not valid.",
@@ -41,6 +36,10 @@ export const getPinsRoute = ({
                     },
                 },
             },
+            description:
+                "Stores text-like data on the Carrot IPFS nodes. " +
+                "The data is converted to text before the storing happens, " +
+                "so trying to store binary data won't end with the expected result.",
             tags: ["api"],
             payload: {
                 maxBytes: 1024, // 1kb
