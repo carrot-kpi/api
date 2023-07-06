@@ -49,4 +49,4 @@ RUN adduser --system --uid 1001 runner
 USER runner
 COPY --from=installer /app .
 
-CMD node apps/@carrot-kpi/pinning-proxy/biuld/index.js
+CMD node packages/pinning-proxy/build/index.js

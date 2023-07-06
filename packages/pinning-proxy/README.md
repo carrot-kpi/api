@@ -99,3 +99,12 @@ and restart the server manually.
 
 The OpenAPI specification is exposed under `/swagger.json`, while the Swagger UI
 is exposed under `/documentation`, so you can easily test the API that way.
+
+## Docker build
+
+To build a Docker image of the service, run the following command from the root
+of the monorepo:
+
+```
+docker build . -f packages/pinning-proxy/Dockerfile
+```
