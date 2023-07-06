@@ -73,7 +73,7 @@ export const getPinsRoute = ({
                 return badGateway("Could not upload file");
             }
 
-            let { content: base64Content } = request.payload as {
+            const { content: base64Content } = request.payload as {
                 content: string;
             };
             const content = Buffer.from(base64Content, "base64").toString();

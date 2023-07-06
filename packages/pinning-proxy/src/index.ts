@@ -1,22 +1,32 @@
 import { server as createServer } from "@hapi/hapi";
 import type { RegisterOptions } from "hapi-swagger";
 import { initializeDatabase } from "./db";
-import { getEnv } from "./utils";
 import { getLoginMessageRoute } from "./routes/login-message";
 import { getTokenRoute } from "./routes/token";
 import { getPinsRoute } from "./routes/pins";
 import { config } from "dotenv";
 import { getAuthenticationScheme } from "./auth";
+import { requireEnv } from "./utils";
 
 if (process.env.NODE_ENV !== "production") config();
 
-const HOST = getEnv({ name: "HOST" });
-const PORT = getEnv({ name: "PORT" });
-const JWT_SECRET_KEY = getEnv({ name: "JWT_SECRET_KEY" });
-const DB_CONNECTION_STRING = getEnv({ name: "DB_CONNECTION_STRING" });
-const IPFS_CLUSTER_BASE_URL = getEnv({ name: "IPFS_CLUSTER_BASE_URL" });
-const IPFS_CLUSTER_AUTH_PASSWORD = getEnv({
+const HOST = requireEnv({ name: "HOST", value: process.env.HOST });
+const PORT = requireEnv({ name: "PORT", value: process.env.PORT });
+const JWT_SECRET_KEY = requireEnv({
+    name: "JWT_SECRET_KEY",
+    value: process.env.JWT_SECRET_KEY,
+});
+const DB_CONNECTION_STRING = requireEnv({
+    name: "DB_CONNECTION_STRING",
+    value: process.env.DB_CONNECTION_STRING,
+});
+const IPFS_CLUSTER_BASE_URL = requireEnv({
+    name: "IPFS_CLUSTER_BASE_URL",
+    value: process.env.IPFS_CLUSTER_BASE_URL,
+});
+const IPFS_CLUSTER_AUTH_PASSWORD = requireEnv({
     name: "IPFS_CLUSTER_AUTH_PASSWORD",
+    value: process.env.IPFS_CLUSTER_AUTH_PASSWORD,
 });
 
 const start = async () => {

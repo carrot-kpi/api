@@ -1,12 +1,11 @@
 import type { Address } from "viem";
 
-interface GetEnvParams {
+interface RequireEnvParams {
     name: string;
-    required?: boolean;
+    value?: string;
 }
 
-export const getEnv = ({ name }: GetEnvParams): string => {
-    const value = process.env[name];
+export const requireEnv = ({ name, value }: RequireEnvParams): string => {
     if (!value) throw new Error(`Env ${name} is required`);
     return value;
 };

@@ -7,7 +7,7 @@
     ],
     "scripts": {
         "build": "turbo run build",
-        "lint": "prettier --check './*.md'",
+        "lint": "turbo run lint && prettier --check ./*.md",
         "format": "prettier --write './*.md'",
         "commitlint": "commitlint -e",
         "prepare": "husky install"

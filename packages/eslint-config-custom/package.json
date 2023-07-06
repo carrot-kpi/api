@@ -8,12 +8,10 @@
         "lint": "prettier --check './**/*.{json,md,js}'",
         "format": "prettier --write './**/*.{json,md,js}'"
     },
-    "peerDependencies": {
-        "eslint-config-prettier": "^8.8.0",
-        "eslint-config-turbo": "^1.9.3",
-        "eslint-plugin-prettier": "^4.2.1"
-    },
-    "devDependencies": {
+    "dependencies": {
+        "@typescript-eslint/eslint-plugin": "^5.61.0",
+        "@typescript-eslint/parser": "^5.61.0",
+        "eslint": "^8.44.0",
         "eslint-config-prettier": "^8.8.0",
         "eslint-config-turbo": "1.10.6",
         "eslint-plugin-prettier": "^4.2.1",
