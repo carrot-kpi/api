@@ -1,0 +1,16 @@
+{
+    "name": "tsconfig",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "lint": "prettier --check './**/*.{json,md}'",
+        "format": "prettier --write './**/*.{json,md}'"
+    },
+    "files": [
+        "./base.json",
+        "./pinning-proxy.json"
+    ],
+    "devDependencies": {
+        "tslib": "^2.5.3"
+    }
+}

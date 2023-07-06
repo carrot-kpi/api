@@ -2,7 +2,11 @@
     "private": true,
     "author": "Federico Luzzi <federico.luzzi@protonmail.com>",
     "license": "GPL-3.0-or-later",
+    "workspaces": [
+        "./packages/*"
+    ],
     "scripts": {
+        "build": "turbo run build",
         "lint": "prettier --check './*.md'",
         "format": "prettier --write './*.md'",
         "commitlint": "commitlint -e",
@@ -12,6 +16,7 @@
         "@commitlint/cli": "^17.1.2",
         "@commitlint/config-conventional": "^17.1.0",
         "husky": "^8.0.1",
-        "prettier": "^2.8.4"
+        "prettier": "^2.8.4",
+        "turbo": "^1.10.7"
     }
 }

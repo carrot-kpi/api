@@ -1,0 +1,38 @@
+version: "3"
+services:
+    postgres:
+        container_name: postgres
+        image: postgres:latest
+        ports:
+            - 127.0.0.1:5432:5432
+        environment:
+            POSTGRES_USER: user
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: pinning-proxy
+        volumes:
+            - ./.compose/postgres:/var/lib/postgresql/data
+    kubo:
+        container_name: kubo
+        image: ipfs/kubo:latest
+        ports:
+            - 8080:8080
+        volumes:
+            - ./.compose/kubo:/data/ipfs
+    cluster:
+        container_name: cluster
+        image: ipfs/ipfs-cluster:latest
+        depends_on:
+            - kubo
+        ports:
+            - 127.0.0.1:9094:9094
+        environment:
+            CLUSTER_PEERNAME: cluster
+            CLUSTER_CRDT_TRUSTEDPEERS: "*"
+            # random 32 byte value
+            CLUSTER_SECRET: "7d839dc3d865ac01198819f12b65bcc700b2a7ba415ca58015601aad75abb5f3"
+            CLUSTER_IPFSHTTP_NODEMULTIADDRESS: "/dns4/kubo/tcp/5001"
+            CLUSTER_RESTAPI_HTTPLISTENMULTIADDRESS: /ip4/0.0.0.0/tcp/9094
+            CLUSTER_RESTAPI_BASICAUTHCREDENTIALS:
+                "pinning-proxy:$IPFS_CLUSTER_AUTH_PASSWORD"
+        volumes:
+            - ./.compose/cluster:/data/ipfs-cluster

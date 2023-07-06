@@ -137,3 +137,5 @@ terraform/*.json
 tfplan
 
 .env
+build
+.compose
