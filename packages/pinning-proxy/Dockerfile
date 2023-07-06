@@ -1,16 +1,16 @@
 FROM node:18-alpine AS base
 
 FROM base AS builder
-RUN apk add --no-cache libc6-compat
 RUN apk update
+RUN apk add --no-cache libc6-compat
 RUN yarn global add turbo
 WORKDIR /app
 COPY . .
 RUN turbo prune --scope=@carrot-kpi/pinning-proxy --docker
 
 FROM base AS installer
-RUN apk add --no-cache libc6-compat
 RUN apk update
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY .gitignore .gitignore
