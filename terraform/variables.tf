@@ -16,6 +16,8 @@ variable "ws_rpc_url_gnosis" {}
 
 variable "ws_rpc_url_scroll_testnet" {}
 
+variable "web3_storage_api_key" {}
+
 variable "ipfs_storage_volume_size" {
   default = "10Gi"
 }

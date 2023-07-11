@@ -20,6 +20,8 @@ variable "cluster_storage_volume_size" {}
 
 variable "persistent_volume_storage_class" {}
 
+variable "web3_storage_api_key" {}
+
 variable "local" {
   type = bool
 }

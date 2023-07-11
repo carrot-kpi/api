@@ -129,6 +129,8 @@ are:
   (needed by the IPFS pinner).
 - `ws_rpc_url_scroll_testnet`: a websocket RPC URL to index contract events on
   the Scroll testnet (needed by the IPFS pinner).
+- `web3_storage_api_key`: a web3.storage API key to let the pinner back up data
+  to Filecoin through web3.storage.
 - `ipfs_storage_volume_size (optional)`: self-describing, this instructs K8s on
   the size of the IPFS storage volume to assign to each IPFS node (defaults to
   100Mb for local deployment and 20Gb for remote deployment).

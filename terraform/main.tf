@@ -70,6 +70,7 @@ module "k8s" {
   ws_rpc_url_sepolia                      = var.ws_rpc_url_sepolia
   ws_rpc_url_gnosis                       = var.ws_rpc_url_gnosis
   ws_rpc_url_scroll_testnet               = var.ws_rpc_url_scroll_testnet
+  web3_storage_api_key                    = var.web3_storage_api_key
   local                                   = false
   ipfs_storage_volume_size                = var.ipfs_storage_volume_size
   cluster_storage_volume_size             = var.cluster_storage_volume_size

@@ -38,6 +38,22 @@ resource "kubernetes_config_map" "init_scripts" {
   }
 }
 
+resource "kubernetes_config_map" "pinner_config" {
+  metadata {
+    name      = "pinner-config"
+    namespace = kubernetes_namespace.api.metadata.0.name
+  }
+
+  data = {
+    "config.yaml" = templatefile("${path.module}/resources/pinner-config.yaml", {
+      web3_storage_api_key      = var.web3_storage_api_key,
+      ws_rpc_url_gnosis         = var.ws_rpc_url_gnosis,
+      ws_rpc_url_sepolia        = var.ws_rpc_url_sepolia,
+      ws_rpc_url_scroll_testnet = var.ws_rpc_url_scroll_testnet
+    })
+  }
+}
+
 resource "kubernetes_stateful_set" "ipfs_node" {
   metadata {
     name      = "ipfs-node"
@@ -246,42 +262,22 @@ resource "kubernetes_deployment" "ipfs_pinner" {
       }
       spec {
         container {
-          name              = "pinner-gnosis"
-          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.5.3"
+          name              = "pinner"
+          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.6.0"
           image_pull_policy = "IfNotPresent"
           env {
-            name  = "IPFS_API_ENDPOINT"
-            value = "http://ipfs-node:9095"
+            name  = "CONFIG_PATH"
+            value = "/custom/config.yaml"
           }
-          env {
-            name  = "WS_RPC_ENDPOINT"
-            value = var.ws_rpc_url_gnosis
+          volume_mount {
+            name       = "pinner-config"
+            mount_path = "/custom"
           }
         }
-        container {
-          name              = "pinner-sepolia"
-          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.5.3"
-          image_pull_policy = "IfNotPresent"
-          env {
-            name  = "IPFS_API_ENDPOINT"
-            value = "http://ipfs-node:9095"
-          }
-          env {
-            name  = "WS_RPC_ENDPOINT"
-            value = var.ws_rpc_url_sepolia
-          }
-        }
-        container {
-          name              = "pinner-scroll-testnet"
-          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.5.3"
-          image_pull_policy = "IfNotPresent"
-          env {
-            name  = "IPFS_API_ENDPOINT"
-            value = "http://ipfs-node:9095"
-          }
-          env {
-            name  = "WS_RPC_ENDPOINT"
-            value = var.ws_rpc_url_scroll_testnet
+        volume {
+          name = "pinner-config"
+          config_map {
+            name = "pinner-config"
           }
         }
       }
