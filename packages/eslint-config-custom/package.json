@@ -1,0 +1,20 @@
+{
+    "private": true,
+    "name": "eslint-config-custom",
+    "version": "0.1.0",
+    "main": "index.js",
+    "license": "GPL-3.0-or-later",
+    "scripts": {
+        "lint": "prettier --check './**/*.{json,md,js}'",
+        "format": "prettier --write './**/*.{json,md,js}'"
+    },
+    "dependencies": {
+        "@typescript-eslint/eslint-plugin": "^5.61.0",
+        "@typescript-eslint/parser": "^5.61.0",
+        "eslint": "^8.44.0",
+        "eslint-config-prettier": "^8.8.0",
+        "eslint-config-turbo": "1.10.6",
+        "eslint-plugin-prettier": "^4.2.1",
+        "prettier": "^2.8.8"
+    }
+}

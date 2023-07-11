@@ -6,6 +6,8 @@ variable "bootstrap_peer_private_key" {}
 
 variable "cluster_secret" {}
 
+variable "cluster_rest_api_basic_auth_credentials" {}
+
 variable "base_api_domain" {}
 
 variable "ws_rpc_url_sepolia" {}

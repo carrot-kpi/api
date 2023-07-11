@@ -1,0 +1,8 @@
+{
+    "extends": "tsconfig/pinning-proxy.json",
+    "include": ["./src/**/*"],
+    "compilerOptions": {
+        "outDir": "./build",
+        "rootDir": "./src"
+    }
+}

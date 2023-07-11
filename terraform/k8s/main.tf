@@ -20,8 +20,9 @@ resource "kubernetes_secret" "ipfs_node" {
   }
 
   data = {
-    bootstrap_peer_private_key = var.bootstrap_peer_private_key
-    cluster_secret             = var.cluster_secret
+    bootstrap_peer_private_key              = var.bootstrap_peer_private_key
+    cluster_secret                          = var.cluster_secret
+    cluster_rest_api_basic_auth_credentials = var.cluster_rest_api_basic_auth_credentials
   }
 }
 
@@ -134,12 +135,25 @@ resource "kubernetes_stateful_set" "ipfs_node" {
             }
           }
           env {
+            name = "CLUSTER_RESTAPI_BASICAUTHCREDENTIALS"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.ipfs_node.metadata.0.name
+                key  = "cluster_rest_api_basic_auth_credentials"
+              }
+            }
+          }
+          env {
             name  = "CLUSTER_MONITOR_PING_INTERVAL"
             value = "3m"
           }
           env {
             name  = "CLUSTER_IPFSPROXY_LISTENMULTIADDRESS"
             value = "/ip4/0.0.0.0/tcp/9095"
+          }
+          env {
+            name  = "CLUSTER_RESTAPI_HTTPLISTENMULTIADDRESS"
+            value = "/ip4/0.0.0.0/tcp/9094"
           }
           env {
             name  = "BOOTSTRAP_PEER_ID"
