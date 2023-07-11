@@ -12,9 +12,9 @@ if (process.env.NODE_ENV !== "production") config();
 
 const HOST = requireEnv({ name: "HOST", value: process.env.HOST });
 const PORT = requireEnv({ name: "PORT", value: process.env.PORT });
-const JWT_SECRET_KEY = requireEnv({
-    name: "JWT_SECRET_KEY",
-    value: process.env.JWT_SECRET_KEY,
+const JWT_SECRET = requireEnv({
+    name: "JWT_SECRET",
+    value: process.env.JWT_SECRET,
 });
 const DB_CONNECTION_STRING = requireEnv({
     name: "DB_CONNECTION_STRING",
@@ -71,13 +71,13 @@ const start = async () => {
 
     server.auth.scheme(
         "jwt",
-        getAuthenticationScheme({ jwtSecretKey: JWT_SECRET_KEY })
+        getAuthenticationScheme({ jwtSecretKey: JWT_SECRET })
     );
     server.auth.strategy("jwt", "jwt");
     server.auth.default("jwt");
 
     server.route(getLoginMessageRoute({ dbClient }));
-    server.route(getTokenRoute({ dbClient, jwtSecretKey: JWT_SECRET_KEY }));
+    server.route(getTokenRoute({ dbClient, jwtSecretKey: JWT_SECRET }));
     server.route(
         getPinsRoute({
             ipfsClusterBaseURL: IPFS_CLUSTER_BASE_URL,
