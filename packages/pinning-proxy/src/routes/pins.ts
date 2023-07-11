@@ -5,11 +5,13 @@ import type { ServerRoute } from "@hapi/hapi";
 
 interface GetPinsRouteParams {
     ipfsClusterBaseURL: string;
+    ipfsClusterUser: string;
     ipfsClusterPassword: string;
 }
 
 export const getPinsRoute = ({
     ipfsClusterBaseURL,
+    ipfsClusterUser,
     ipfsClusterPassword,
 }: GetPinsRouteParams): ServerRoute => {
     return {
@@ -65,6 +67,7 @@ export const getPinsRoute = ({
             try {
                 authToken = await getIPFSClusterAuthToken({
                     ipfsClusterBaseURL,
+                    user: ipfsClusterUser,
                     password: ipfsClusterPassword,
                 });
             } catch (error) {

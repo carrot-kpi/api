@@ -2,7 +2,7 @@ import { badRequest, forbidden, internal } from "@hapi/boom";
 import { object, string } from "joi";
 import { isAddress, getAddress, recoverMessageAddress } from "viem/utils";
 import type { Hex, Address } from "viem";
-import { getNonce } from "../db";
+import { deleteNonce, getNonce } from "../db";
 import { getLoginMessage } from "../utils";
 import type { Client } from "pg";
 import type { ServerRoute } from "@hapi/hapi";
@@ -108,6 +108,16 @@ export const getTokenRoute = ({
                 token = generateJWT({ jwtSecretKey });
             } catch (error) {
                 console.error("Error while generating JWT", error);
+                return internal("Error while generating JWT");
+            }
+
+            try {
+                await deleteNonce({ client: dbClient, address });
+            } catch (error) {
+                console.error(
+                    "Error while deleting nonce from database",
+                    error
+                );
                 return internal("Error while generating JWT");
             }
 

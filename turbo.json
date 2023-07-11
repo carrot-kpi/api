@@ -15,6 +15,7 @@
         "JWT_SECRET_KEY",
         "DB_CONNECTION_STRING",
         "IPFS_CLUSTER_BASE_URL",
+        "IPFS_CLUSTER_AUTH_USER",
         "IPFS_CLUSTER_AUTH_PASSWORD"
     ]
 }

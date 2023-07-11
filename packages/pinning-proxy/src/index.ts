@@ -24,6 +24,10 @@ const IPFS_CLUSTER_BASE_URL = requireEnv({
     name: "IPFS_CLUSTER_BASE_URL",
     value: process.env.IPFS_CLUSTER_BASE_URL,
 });
+const IPFS_CLUSTER_AUTH_USER = requireEnv({
+    name: "IPFS_CLUSTER_AUTH_USER",
+    value: process.env.IPFS_CLUSTER_AUTH_USER,
+});
 const IPFS_CLUSTER_AUTH_PASSWORD = requireEnv({
     name: "IPFS_CLUSTER_AUTH_PASSWORD",
     value: process.env.IPFS_CLUSTER_AUTH_PASSWORD,
@@ -77,6 +81,7 @@ const start = async () => {
     server.route(
         getPinsRoute({
             ipfsClusterBaseURL: IPFS_CLUSTER_BASE_URL,
+            ipfsClusterUser: IPFS_CLUSTER_AUTH_USER,
             ipfsClusterPassword: IPFS_CLUSTER_AUTH_PASSWORD,
         })
     );

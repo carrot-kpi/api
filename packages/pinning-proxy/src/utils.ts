@@ -12,19 +12,21 @@ export const requireEnv = ({ name, value }: RequireEnvParams): string => {
 
 interface GetIPFSClusterAuthTokenParams {
     ipfsClusterBaseURL: string;
+    user: string;
     password: string;
 }
 
 export const getIPFSClusterAuthToken = async ({
     ipfsClusterBaseURL,
+    user,
     password,
 }: GetIPFSClusterAuthTokenParams): Promise<string> => {
     const response = await fetch(new URL("/token", ipfsClusterBaseURL), {
         method: "POST",
         headers: {
-            Authorization: `Basic ${Buffer.from(
-                `pinning-proxy:${password}`
-            ).toString("base64")}`,
+            Authorization: `Basic ${Buffer.from(`${user}:${password}`).toString(
+                "base64"
+            )}`,
         },
     });
     if (!response.ok)
