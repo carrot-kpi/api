@@ -38,7 +38,8 @@ export const getPinsRoute = ({
                     },
                 },
             },
-            description:
+            description: "Store text-like data on Carrot IPFS nodes.",
+            notes:
                 "Stores text-like data on the Carrot IPFS nodes. " +
                 "The data is converted to text before the storing happens, " +
                 "so trying to store binary data won't end with the expected result.",

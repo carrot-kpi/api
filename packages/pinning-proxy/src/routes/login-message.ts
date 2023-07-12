@@ -38,6 +38,8 @@ export const getLoginMessageRoute = ({
                 },
             },
             description:
+                "Gets a new login message to sign for a given address.",
+            notes:
                 "Updates or creates a new nonce for a given address (user), " +
                 "and returns the login message that a user needs to sign in order " +
                 "to authenticate, with the nonce baked in. This is used in order " +
