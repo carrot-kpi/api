@@ -650,7 +650,7 @@ resource "kubernetes_ingress_v1" "ipfs_gateway" {
     annotations = {
       "kubernetes.io/ingress.class"                       = "nginx"
       "cert-manager.io/issuer"                            = "letsencrypt-prod"
-      "nginx.ingress.kubernetes.io/limit-rps"             = 10
+      "nginx.ingress.kubernetes.io/limit-rps"             = 50
       "nginx.ingress.kubernetes.io/limit-req-status-code" = 429
     }
   }
@@ -694,7 +694,7 @@ resource "kubernetes_ingress_v1" "pinning_proxy" {
     annotations = {
       "kubernetes.io/ingress.class"                       = "nginx"
       "cert-manager.io/issuer"                            = "letsencrypt-prod"
-      "nginx.ingress.kubernetes.io/limit-rps"             = 5
+      "nginx.ingress.kubernetes.io/limit-rps"             = 20
       "nginx.ingress.kubernetes.io/limit-req-status-code" = 429
     }
   }
@@ -831,7 +831,7 @@ resource "kubernetes_ingress_v1" "token_list" {
     annotations = {
       "kubernetes.io/ingress.class"                       = "nginx"
       "cert-manager.io/issuer"                            = "letsencrypt-prod"
-      "nginx.ingress.kubernetes.io/limit-rps"             = 5
+      "nginx.ingress.kubernetes.io/limit-rps"             = 10
       "nginx.ingress.kubernetes.io/limit-req-status-code" = 429
     }
   }
