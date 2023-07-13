@@ -14,7 +14,7 @@ export const getLoginMessageRoute = ({
     dbClient,
 }: GetLoginMessageRouteParams): ServerRoute => {
     return {
-        method: "PUT",
+        method: "GET",
         path: "/login-message/{address}",
         options: {
             plugins: {
