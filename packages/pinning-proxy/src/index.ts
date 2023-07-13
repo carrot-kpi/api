@@ -47,6 +47,9 @@ const start = async () => {
     const server = createServer({
         host: HOST,
         port: PORT,
+        routes: {
+            cors: true,
+        },
     });
 
     await server.register([
