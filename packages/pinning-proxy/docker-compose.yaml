@@ -9,15 +9,11 @@ services:
             POSTGRES_USER: user
             POSTGRES_PASSWORD: password
             POSTGRES_DB: pinning-proxy
-        volumes:
-            - ./.compose/postgres:/var/lib/postgresql/data
     kubo:
         container_name: kubo
         image: ipfs/kubo:latest
         ports:
             - 8080:8080
-        volumes:
-            - ./.compose/kubo:/data/ipfs
     cluster:
         container_name: cluster
         image: ipfs/ipfs-cluster:latest
@@ -34,5 +30,3 @@ services:
             CLUSTER_RESTAPI_HTTPLISTENMULTIADDRESS: /ip4/0.0.0.0/tcp/9094
             CLUSTER_RESTAPI_BASICAUTHCREDENTIALS:
                 "$IPFS_CLUSTER_AUTH_USER:$IPFS_CLUSTER_AUTH_PASSWORD"
-        volumes:
-            - ./.compose/cluster:/data/ipfs-cluster
