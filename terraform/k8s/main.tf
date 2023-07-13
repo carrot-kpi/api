@@ -331,7 +331,7 @@ resource "kubernetes_stateful_set" "pinning-proxy" {
       spec {
         container {
           name              = "pinning-proxy"
-          image             = "luzzif/carrot-kpi-pinning-proxy:v0.3.0"
+          image             = "luzzif/carrot-kpi-pinning-proxy:v0.4.0"
           image_pull_policy = "IfNotPresent"
           env {
             name  = "HOST"
