@@ -13,6 +13,20 @@ resource "kubernetes_namespace" "api" {
   }
 }
 
+resource "kubernetes_secret" "pinning_proxy" {
+  metadata {
+    name      = "pinning-proxy"
+    namespace = kubernetes_namespace.api.metadata.0.name
+  }
+
+  data = {
+    pinning_proxy_jwt_secret   = var.pinning_proxy_jwt_secret
+    postgres_user              = var.postgres_user
+    postgres_password          = var.postgres_password
+    postgres_connection_string = "postgresql://${var.postgres_user}:${var.postgres_password}@127.0.0.1:5432/pinning-proxy"
+  }
+}
+
 resource "kubernetes_secret" "ipfs_node" {
   metadata {
     name      = "ipfs-node"
@@ -22,7 +36,9 @@ resource "kubernetes_secret" "ipfs_node" {
   data = {
     bootstrap_peer_private_key              = var.bootstrap_peer_private_key
     cluster_secret                          = var.cluster_secret
-    cluster_rest_api_basic_auth_credentials = var.cluster_rest_api_basic_auth_credentials
+    cluster_rest_api_user                   = var.cluster_rest_api_user
+    cluster_rest_api_password               = var.cluster_rest_api_password
+    cluster_rest_api_basic_auth_credentials = "${var.cluster_rest_api_user}:${var.cluster_rest_api_password}"
   }
 }
 
@@ -35,6 +51,22 @@ resource "kubernetes_config_map" "init_scripts" {
   data = {
     "init-kubo.sh"    = "${file("${path.module}/scripts/init-kubo.sh")}"
     "init-cluster.sh" = "${file("${path.module}/scripts/init-cluster.sh")}"
+  }
+}
+
+resource "kubernetes_secret" "pinner_config" {
+  metadata {
+    name      = "pinner-config"
+    namespace = kubernetes_namespace.api.metadata.0.name
+  }
+
+  data = {
+    "config.yaml" = templatefile("${path.module}/resources/pinner-config.yaml", {
+      web3_storage_api_key      = var.web3_storage_api_key,
+      ws_rpc_url_gnosis         = var.ws_rpc_url_gnosis,
+      ws_rpc_url_sepolia        = var.ws_rpc_url_sepolia,
+      ws_rpc_url_scroll_testnet = var.ws_rpc_url_scroll_testnet
+    })
   }
 }
 
@@ -160,6 +192,11 @@ resource "kubernetes_stateful_set" "ipfs_node" {
             value = var.bootstrap_peer_id
           }
           port {
+            name           = "cluster-rest"
+            protocol       = "TCP"
+            container_port = 9094
+          }
+          port {
             name           = "cluster-proxy"
             protocol       = "TCP"
             container_port = 9095
@@ -246,42 +283,22 @@ resource "kubernetes_deployment" "ipfs_pinner" {
       }
       spec {
         container {
-          name              = "pinner-gnosis"
-          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.5.3"
+          name              = "pinner"
+          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.6.0"
           image_pull_policy = "IfNotPresent"
           env {
-            name  = "IPFS_API_ENDPOINT"
-            value = "http://ipfs-node:9095"
+            name  = "CONFIG_PATH"
+            value = "/custom/config.yaml"
           }
-          env {
-            name  = "WS_RPC_ENDPOINT"
-            value = var.ws_rpc_url_gnosis
+          volume_mount {
+            name       = "pinner-config"
+            mount_path = "/custom"
           }
         }
-        container {
-          name              = "pinner-sepolia"
-          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.5.3"
-          image_pull_policy = "IfNotPresent"
-          env {
-            name  = "IPFS_API_ENDPOINT"
-            value = "http://ipfs-node:9095"
-          }
-          env {
-            name  = "WS_RPC_ENDPOINT"
-            value = var.ws_rpc_url_sepolia
-          }
-        }
-        container {
-          name              = "pinner-scroll-testnet"
-          image             = "luzzif/carrot-kpi-ipfs-pinner:v0.5.3"
-          image_pull_policy = "IfNotPresent"
-          env {
-            name  = "IPFS_API_ENDPOINT"
-            value = "http://ipfs-node:9095"
-          }
-          env {
-            name  = "WS_RPC_ENDPOINT"
-            value = var.ws_rpc_url_scroll_testnet
+        volume {
+          name = "pinner-config"
+          secret {
+            secret_name = "pinner-config"
           }
         }
       }
@@ -290,6 +307,163 @@ resource "kubernetes_deployment" "ipfs_pinner" {
 
   depends_on = [
     kubernetes_stateful_set.ipfs_node
+  ]
+}
+
+resource "kubernetes_stateful_set" "pinning-proxy" {
+  metadata {
+    name      = "pinning-proxy"
+    namespace = kubernetes_namespace.api.metadata.0.name
+  }
+  spec {
+    service_name = "pinning-proxy"
+    selector {
+      match_labels = {
+        app = "pinning-proxy"
+      }
+    }
+    template {
+      metadata {
+        labels = {
+          app = "pinning-proxy"
+        }
+      }
+      spec {
+        container {
+          name              = "pinning-proxy"
+          image             = "luzzif/carrot-kpi-pinning-proxy:v0.3.0"
+          image_pull_policy = "IfNotPresent"
+          env {
+            name  = "HOST"
+            value = "0.0.0.0"
+          }
+          env {
+            name  = "PORT"
+            value = 2222
+          }
+          env {
+            name = "JWT_SECRET"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.pinning_proxy.metadata.0.name
+                key  = "pinning_proxy_jwt_secret"
+              }
+            }
+          }
+          env {
+            name = "DB_CONNECTION_STRING"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.pinning_proxy.metadata.0.name
+                key  = "postgres_connection_string"
+              }
+            }
+          }
+          env {
+            name  = "IPFS_CLUSTER_BASE_URL"
+            value = "http://ipfs-node:9094"
+          }
+          env {
+            name = "IPFS_CLUSTER_AUTH_USER"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.ipfs_node.metadata.0.name
+                key  = "cluster_rest_api_user"
+              }
+            }
+          }
+          env {
+            name = "IPFS_CLUSTER_AUTH_PASSWORD"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.ipfs_node.metadata.0.name
+                key  = "cluster_rest_api_password"
+              }
+            }
+          }
+          port {
+            name           = "api"
+            protocol       = "TCP"
+            container_port = 2222
+          }
+          liveness_probe {
+            tcp_socket {
+              port = "api"
+            }
+            initial_delay_seconds = 5
+            timeout_seconds       = 5
+            period_seconds        = 15
+          }
+        }
+        container {
+          name  = "postgres"
+          image = "postgres:latest"
+          env {
+            name = "POSTGRES_USER"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.pinning_proxy.metadata.0.name
+                key  = "postgres_user"
+              }
+            }
+          }
+          env {
+            name = "POSTGRES_PASSWORD"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret.pinning_proxy.metadata.0.name
+                key  = "postgres_password"
+              }
+            }
+          }
+          env {
+            name  = "POSTGRES_DB"
+            value = "pinning-proxy"
+          }
+          env {
+            name  = "PGDATA"
+            value = "/var/lib/postgresql/data/pgdata"
+          }
+          port {
+            name           = "postgres"
+            protocol       = "TCP"
+            container_port = 5432
+          }
+          liveness_probe {
+            tcp_socket {
+              port = "postgres"
+            }
+            initial_delay_seconds = 5
+            timeout_seconds       = 5
+            period_seconds        = 10
+          }
+          volume_mount {
+            name       = "db-storage"
+            mount_path = "/var/lib/postgresql/data"
+          }
+        }
+      }
+    }
+    volume_claim_template {
+      metadata {
+        name      = "db-storage"
+        namespace = kubernetes_namespace.api.metadata.0.name
+      }
+      spec {
+        storage_class_name = var.persistent_volume_storage_class
+        access_modes       = ["ReadWriteOnce"]
+        resources {
+          requests = {
+            storage = var.postgres_storage_volume_size
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [
+    kubernetes_stateful_set.ipfs_node,
+    kubernetes_deployment.ipfs_pinner,
   ]
 }
 
@@ -385,6 +559,11 @@ resource "kubernetes_service_v1" "ipfs_node" {
       port        = 9095
       target_port = "cluster-proxy"
     }
+    port {
+      name        = "cluster-rest"
+      port        = 9094
+      target_port = "cluster-rest"
+    }
   }
 }
 
@@ -440,8 +619,27 @@ resource "kubernetes_service_v1" "ipfs_node_1_swarm" {
   }
 }
 
+resource "kubernetes_service_v1" "pinning_proxy" {
+  metadata {
+    name      = "pinning-proxy"
+    namespace = kubernetes_namespace.api.metadata.0.name
+  }
+  spec {
+    selector = {
+      app = "pinning-proxy"
+    }
+    port {
+      name        = "api"
+      port        = 2222
+      protocol    = "TCP"
+      target_port = "api"
+    }
+  }
+}
+
 locals {
-  ipfs_gateway_domain = "gateway.${var.base_api_domain}"
+  ipfs_gateway_domain  = "gateway.${var.base_api_domain}"
+  pinning_proxy_domain = "pinning-proxy.${var.base_api_domain}"
 }
 
 resource "kubernetes_ingress_v1" "ipfs_gateway" {
@@ -450,8 +648,10 @@ resource "kubernetes_ingress_v1" "ipfs_gateway" {
     name      = "ipfs-gateway"
     namespace = kubernetes_namespace.api.metadata.0.name
     annotations = {
-      "kubernetes.io/ingress.class" = "nginx"
-      "cert-manager.io/issuer"      = "letsencrypt-prod"
+      "kubernetes.io/ingress.class"                       = "nginx"
+      "cert-manager.io/issuer"                            = "letsencrypt-prod"
+      "nginx.ingress.kubernetes.io/limit-rps"             = 10
+      "nginx.ingress.kubernetes.io/limit-req-status-code" = 429
     }
   }
   spec {
@@ -470,6 +670,50 @@ resource "kubernetes_ingress_v1" "ipfs_gateway" {
               name = kubernetes_service_v1.ipfs_node.metadata.0.name
               port {
                 number = 8080
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [
+    helm_release.nginx_ingress,
+    helm_release.cert_manager,
+    kubectl_manifest.letsencrypt_issuer_staging,
+    kubectl_manifest.letsencrypt_issuer_prod
+  ]
+}
+
+resource "kubernetes_ingress_v1" "pinning_proxy" {
+  wait_for_load_balancer = true
+  metadata {
+    name      = "pinning-proxy"
+    namespace = kubernetes_namespace.api.metadata.0.name
+    annotations = {
+      "kubernetes.io/ingress.class"                       = "nginx"
+      "cert-manager.io/issuer"                            = "letsencrypt-prod"
+      "nginx.ingress.kubernetes.io/limit-rps"             = 5
+      "nginx.ingress.kubernetes.io/limit-req-status-code" = 429
+    }
+  }
+  spec {
+    tls {
+      hosts       = [local.pinning_proxy_domain]
+      secret_name = "pinning-proxy-ingress-tls"
+    }
+    rule {
+      host = local.pinning_proxy_domain
+      http {
+        path {
+          path      = "/"
+          path_type = "Prefix"
+          backend {
+            service {
+              name = kubernetes_service_v1.pinning_proxy.metadata.0.name
+              port {
+                number = 2222
               }
             }
           }
@@ -585,8 +829,10 @@ resource "kubernetes_ingress_v1" "token_list" {
     name      = "token-list"
     namespace = kubernetes_namespace.api.metadata.0.name
     annotations = {
-      "kubernetes.io/ingress.class" = "nginx"
-      "cert-manager.io/issuer"      = "letsencrypt-prod"
+      "kubernetes.io/ingress.class"                       = "nginx"
+      "cert-manager.io/issuer"                            = "letsencrypt-prod"
+      "nginx.ingress.kubernetes.io/limit-rps"             = 5
+      "nginx.ingress.kubernetes.io/limit-req-status-code" = 429
     }
   }
   spec {

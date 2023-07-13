@@ -64,8 +64,10 @@ following main resources are created:
     potentially many nodes.
 - **IPFS pinner deployment**: a `kubernetes_deployment` resource responsible to
   bootstrap and manage an
-  [IPFS pinner](https://github.com/carrot-kpi/ipfs-pinner) instance for each
-  supported chain.
+  [IPFS pinner](https://github.com/carrot-kpi/ipfs-pinner) instance
+- **Pinning proxy stateful set**: a `kubernetes_stateful_set` resource
+  responsible to bootstrap and manage a pinning proxy instance with its
+  database.
 - **NGINX ingress**: a `helm_release` that installs the NGINX ingress server
   theough which the main ingress load balancer is bootstrapped. A few custom
   annotations are applied to govern DigitalOcean's behavior when instantiating
@@ -78,12 +80,16 @@ following main resources are created:
 - **Cert manager prod Let's Encrypt issuer**: a `kubectl_manifest` that adds a
   prod Let's Encrypt certificate issuer.
 - **IPFS node service**: a `kubernetes_service_v1` internal service that allows
-  internal communication between nodes and external communication to Kubo's
-  gateway API through the ingress load balancer rules.
+  internal communication between nodes and external communication to Kubo's APIs
+  through the ingress load balancer rules.
 - **IPFS gateway ingress**: an ingress that allows calls to the
   `gateway.<base-api-domain>` host to be redirected to the backend IPFS node
   service. It leverages the NGINX ingress controller and the Let's Encrypt prod
   certificate issuer.
+- **Pinning proxy ingress**: an ingress that allows calls to the
+  `pinning-proxy.<base-api-domain>` host to be redirected to the backend pinning
+  proxy service. It leverages the NGINX ingress controller and the Let's Encrypt
+  prod certificate issuer.
 - **NGINX configuration config map**: this config map is used to mount the
   `nginx` static server configuration under `/etc/nginx/conf.d` so that it can
   be picked up by the `nginx` container. Static files can be served by it.
@@ -122,13 +128,30 @@ are:
   DigitalOcean, and it's the DigitalOcean API token. See
   [here](https://docs.digitalocean.com/reference/api/create-personal-access-token/)
   for how to create one.
-- `api_domain`: the domain that will point to the API ingress.
+- `base_api_domain`: the base domain that will be used to point to the various
+  services.
+- `cluster_rest_api_user`: a user name for the IPFS cluster REST API.
+- `cluster_rest_api_password`: a password for the IPFS cluster REST API. A
+  reasonably secure value can be generated using
+  `od -vN 64 -An -tx1 /dev/urandom | tr -d ' \n'`
 - `ws_rpc_url_sepolia`: a websocket RPC URL to index contract events on Sepolia
   (needed by the IPFS pinner).
 - `ws_rpc_url_gnosis`: a websocket RPC URL to index contract events on Gnosis
   (needed by the IPFS pinner).
 - `ws_rpc_url_scroll_testnet`: a websocket RPC URL to index contract events on
   the Scroll testnet (needed by the IPFS pinner).
+- `web3_storage_api_key`: a web3.storage API key to let the pinner back up data
+  to Filecoin through web3.storage.
+- `pinning_proxy_jwt_secret`: a random value used to issue and check JWT tokens
+  for the pinning proxy API. A reasonably secure value can be generated using
+  the following command: `od -vN 32 -An -tx1 /dev/urandom | tr -d ' \n'`.
+- `postgres_user`: a string that can be used as the Postgres user.
+- `postgres_password`: a string that can be used as the Postgres user password.
+  A reasonably secure value can be generated using the following command:
+  `od -vN 32 -An -tx1 /dev/urandom | tr -d ' \n'`.
+- `postgres_storage_volume_size (optional)`: self-describing, this instructs K8s
+  on the size of the Postgres storage volume (defaults to 50Mb for local
+  deployment and 500Mb for remote deployment).
 - `ipfs_storage_volume_size (optional)`: self-describing, this instructs K8s on
   the size of the IPFS storage volume to assign to each IPFS node (defaults to
   100Mb for local deployment and 20Gb for remote deployment).

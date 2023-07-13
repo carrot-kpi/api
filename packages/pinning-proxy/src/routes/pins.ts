@@ -5,11 +5,13 @@ import type { ServerRoute } from "@hapi/hapi";
 
 interface GetPinsRouteParams {
     ipfsClusterBaseURL: string;
+    ipfsClusterUser: string;
     ipfsClusterPassword: string;
 }
 
 export const getPinsRoute = ({
     ipfsClusterBaseURL,
+    ipfsClusterUser,
     ipfsClusterPassword,
 }: GetPinsRouteParams): ServerRoute => {
     return {
@@ -36,7 +38,8 @@ export const getPinsRoute = ({
                     },
                 },
             },
-            description:
+            description: "Store text-like data on Carrot IPFS nodes.",
+            notes:
                 "Stores text-like data on the Carrot IPFS nodes. " +
                 "The data is converted to text before the storing happens, " +
                 "so trying to store binary data won't end with the expected result.",
@@ -65,6 +68,7 @@ export const getPinsRoute = ({
             try {
                 authToken = await getIPFSClusterAuthToken({
                     ipfsClusterBaseURL,
+                    user: ipfsClusterUser,
                     password: ipfsClusterPassword,
                 });
             } catch (error) {

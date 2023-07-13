@@ -33,6 +33,6 @@ services:
             CLUSTER_IPFSHTTP_NODEMULTIADDRESS: "/dns4/kubo/tcp/5001"
             CLUSTER_RESTAPI_HTTPLISTENMULTIADDRESS: /ip4/0.0.0.0/tcp/9094
             CLUSTER_RESTAPI_BASICAUTHCREDENTIALS:
-                "pinning-proxy:$IPFS_CLUSTER_AUTH_PASSWORD"
+                "$IPFS_CLUSTER_AUTH_USER:$IPFS_CLUSTER_AUTH_PASSWORD"
         volumes:
             - ./.compose/cluster:/data/ipfs-cluster

@@ -53,10 +53,14 @@ The required env variables are:
 
 - `HOST`: the server's host.
 - `PORT`: the server's port.
-- `JWT_SECRET_KEY`: the secret key used to sign the issued JWTs. It's of utmost
+- `JWT_SECRET`: the secret used to sign the issued JWTs. It's of utmost
   importance to keep this value secret.
 - `IPFS_CLUSTER_BASE_URL`: the base URL where the proxied IPFS cluster API is
   being exposed.
+- `IPFS_CLUSTER_AUTH_USER`: the IPFS cluster API user as set using the
+  `basic_auth_credentials` parameter (see
+  [here](https://ipfscluster.io/documentation/reference/configuration/)). This
+  will be used to request the API auth token through which pins can be added
 - `IPFS_CLUSTER_AUTH_PASSWORD`: the IPFS cluster API password as set using the
   `basic_auth_credentials` parameter (see
   [here](https://ipfscluster.io/documentation/reference/configuration/)). This

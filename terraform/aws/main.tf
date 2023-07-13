@@ -11,15 +11,25 @@ resource "aws_s3_bucket" "main" {
 }
 
 locals {
-  hero_video_name = "hero-video.webm"
-  hero_video_path = "${path.module}/resources/${local.hero_video_name}"
+  hero_video_webm_name = "hero-video.webm"
+  hero_video_webm_path = "${path.module}/resources/${local.hero_video_webm_name}"
+
+  hero_video_mp4_name = "hero-video.mp4"
+  hero_video_mp4_path = "${path.module}/resources/${local.hero_video_mp4_name}"
 }
 
-resource "aws_s3_bucket_object" "hero_video" {
+resource "aws_s3_bucket_object" "hero_video_webm" {
   bucket = aws_s3_bucket.main.id
-  key    = local.hero_video_name
-  source = local.hero_video_path
-  etag   = filemd5(local.hero_video_path)
+  key    = local.hero_video_webm_name
+  source = local.hero_video_webm_path
+  etag   = filemd5(local.hero_video_webm_path)
+}
+
+resource "aws_s3_bucket_object" "hero_video_mp4" {
+  bucket = aws_s3_bucket.main.id
+  key    = local.hero_video_mp4_name
+  source = local.hero_video_mp4_path
+  etag   = filemd5(local.hero_video_mp4_path)
 }
 
 resource "aws_cloudfront_origin_access_identity" "main" {
@@ -71,10 +81,9 @@ resource "aws_cloudfront_distribution" "main" {
     }
   }
 
-  enabled             = true
-  is_ipv6_enabled     = true
-  price_class         = "PriceClass_100"
-  default_root_object = local.hero_video_name
+  enabled         = true
+  is_ipv6_enabled = true
+  price_class     = "PriceClass_100"
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]

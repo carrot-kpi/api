@@ -1,0 +1,42 @@
+ipfs_api_endpoint: "http://ipfs-node:9095"
+web3_storage_api_key: "${web3_storage_api_key}" 
+chain_configs:
+  # gnosis
+  100:
+    ws_rpc_endpoint: "${ws_rpc_url_gnosis}"
+    logs_blocks_range: 7000
+    factory:
+      address: "0xD503Bdcc3Cd38D3cEaBa1efA43EFCc03b7Fb1CbA"
+      deployment_block: 28680516
+    kpi_tokens_manager:
+      address: "0xCd85e0690f85A52D260273E5B51336D1151F2832"
+      deployment_block: 28680518
+    oracles_manager:
+      address: "0xc9E426B468d334AF6208ef9b3bA5f599d1417c6e"
+      deployment_block: 28680520
+  # sepolia
+  11155111:
+    ws_rpc_endpoint: "${ws_rpc_url_sepolia}"
+    logs_blocks_range: 7000
+    factory:
+      address: "0x44bBb970E534bCE4B42C5a34b15d5B049704417A"
+      deployment_block: 3784913
+    kpi_tokens_manager:
+      address: "0xA4537024597F8B9243AbE105D0Cb297Ea2562ef1"
+      deployment_block: 3784915
+    oracles_manager:
+      address: "0x940d1D2F5c5724a37593D323bFde54F81D6f11C0"
+      deployment_block: 3784917
+  # scroll testnet
+  534353:
+    ws_rpc_endpoint: "${ws_rpc_url_scroll_testnet}"
+    logs_blocks_range: 7000
+    factory:
+      address: "0xDDD3e99f11488290Ff07BAe128Bd6D23362f2455"
+      deployment_block: 3398468
+    kpi_tokens_manager:
+      address: "0xe0D8CcAa64e8C88DD97f442109d591A7e4F57244"
+      deployment_block: 3398470
+    oracles_manager:
+      address: "0x8d98758EfF88Dc944035B0618a8412C400E71C72"
+      deployment_block: 3398473

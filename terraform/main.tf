@@ -62,16 +62,22 @@ provider "helm" {
 module "k8s" {
   source = "./k8s"
 
-  bootstrap_peer_id                       = var.bootstrap_peer_id
-  bootstrap_peer_private_key              = var.bootstrap_peer_private_key
-  cluster_secret                          = var.cluster_secret
-  cluster_rest_api_basic_auth_credentials = var.cluster_rest_api_basic_auth_credentials
-  base_api_domain                         = var.base_api_domain
-  ws_rpc_url_sepolia                      = var.ws_rpc_url_sepolia
-  ws_rpc_url_gnosis                       = var.ws_rpc_url_gnosis
-  ws_rpc_url_scroll_testnet               = var.ws_rpc_url_scroll_testnet
-  local                                   = false
-  ipfs_storage_volume_size                = var.ipfs_storage_volume_size
-  cluster_storage_volume_size             = var.cluster_storage_volume_size
-  persistent_volume_storage_class         = "do-block-storage-retain"
+  bootstrap_peer_id               = var.bootstrap_peer_id
+  bootstrap_peer_private_key      = var.bootstrap_peer_private_key
+  cluster_secret                  = var.cluster_secret
+  cluster_rest_api_user           = var.cluster_rest_api_user
+  cluster_rest_api_password       = var.cluster_rest_api_password
+  base_api_domain                 = var.base_api_domain
+  ws_rpc_url_sepolia              = var.ws_rpc_url_sepolia
+  ws_rpc_url_gnosis               = var.ws_rpc_url_gnosis
+  ws_rpc_url_scroll_testnet       = var.ws_rpc_url_scroll_testnet
+  web3_storage_api_key            = var.web3_storage_api_key
+  pinning_proxy_jwt_secret        = var.pinning_proxy_jwt_secret
+  postgres_user                   = var.postgres_user
+  postgres_password               = var.postgres_password
+  local                           = false
+  postgres_storage_volume_size    = var.postgres_storage_volume_size
+  ipfs_storage_volume_size        = var.ipfs_storage_volume_size
+  cluster_storage_volume_size     = var.cluster_storage_volume_size
+  persistent_volume_storage_class = "do-block-storage-retain"
 }

@@ -59,3 +59,12 @@ export const getNonce = async ({
     if (!nonce) throw new Error(`No nonce value found for address ${address}`);
     return nonce;
 };
+
+export const deleteNonce = async ({
+    client,
+    address,
+}: GetNonceParams): Promise<void> => {
+    if (!isAddress(address))
+        throw new Error(`Invalid address ${address} given`);
+    await client.query("DELETE FROM nonces WHERE address = $1", [address]);
+};

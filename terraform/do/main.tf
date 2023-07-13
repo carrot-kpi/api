@@ -46,3 +46,10 @@ resource "digitalocean_record" "token_list" {
   name   = "tokens"
   value  = var.cluster_ingress_ip
 }
+
+resource "digitalocean_record" "pinning_proxy" {
+  domain = digitalocean_domain.main.name
+  type   = "A"
+  name   = "pinning-proxy."
+  value  = var.cluster_ingress_ip
+}
